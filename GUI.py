@@ -23,31 +23,34 @@ class GUI(QWidget):
         self.window.setMinimumSize(500, 500)
         self.window.setBackground('k')  # Set background color for the entire window
 
-        # First Viewer
         self.signal_viewer = self.window.addPlot(title="Signal Viewer")
+        self.signal_viewer.setLabel('left', 'Amplitude')  # Set y-axis label
+        self.signal_viewer.setLabel('bottom', 'Time (s)')  # Set x-axis label
         self.signal_viewer.setAspectLocked(False)
-        self.signal_viewer.showGrid(x=True, y=True)
+        self.signal_viewer.showGrid(x=True, y=True,alpha=0.4)
 
-
-        # Second Viewer
         self.reconstruction_viewer = self.window.addPlot(title="Reconstruction Viewer")
+        self.reconstruction_viewer.setLabel('left', 'Amplitude')  # Set y-axis label
+        self.reconstruction_viewer.setLabel('bottom', 'Time (s)')  # Set x-axis label
         self.reconstruction_viewer.setAspectLocked(False)
-        self.reconstruction_viewer.showGrid(x=True, y=True)
+        self.reconstruction_viewer.showGrid(x=True, y=True,alpha=0.4)
+        self.reconstruction_viewer.addLegend()
 
         # Move to the next row
         self.window.nextRow()
 
-        # Third Viewer
         self.difference_viewer = self.window.addPlot(title="Difference Viewer")
+        self.difference_viewer.setLabel('left', 'Amplitude')  # Set y-axis label
+        self.difference_viewer.setLabel('bottom', 'Time (s)')  # Set x-axis label
         self.difference_viewer.setAspectLocked(False)
-        self.difference_viewer.showGrid(x=True, y=True)
+        self.difference_viewer.showGrid(x=True, y=True,alpha=0.4)
 
-        # Fourth Viewer
         self.freq_viewer = self.window.addPlot(title="Frequency Viewer")
+        self.freq_viewer.setLabel('left', 'Magnitude')  # Set y-axis label
+        self.freq_viewer.setLabel('bottom', 'Frequency (Hz)')  # Set x-axis label
         self.freq_viewer.setAspectLocked(False)
-        self.freq_viewer.showGrid(x=True, y=True)
+        self.freq_viewer.showGrid(x=True, y=True,alpha=0.4)
 
-        # Add the GraphicsLayoutWidget to the horizontal layout
         horizontal_layout.addWidget(self.window)
         ##########################################################
         #             PLease Marcii Write ur code below          #
@@ -64,6 +67,7 @@ class GUI(QWidget):
         self.show()
 
     def plot(self,time,amplitude):
+        self.signal_viewer.clear()
         self.signal_viewer.plot(time,amplitude)
     def stem_plot(self):
         pass
