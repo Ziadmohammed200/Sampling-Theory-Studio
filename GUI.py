@@ -1,3 +1,4 @@
+import numpy as np
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QWidget, QPushButton
@@ -26,6 +27,7 @@ class GUI(QWidget):
         self.signal_viewer = self.window.addPlot(title="Signal Viewer")
         self.signal_viewer.setAspectLocked(False)
         self.signal_viewer.showGrid(x=True, y=True)
+
 
         # Second Viewer
         self.reconstruction_viewer = self.window.addPlot(title="Reconstruction Viewer")
@@ -61,8 +63,8 @@ class GUI(QWidget):
         self.setLayout(horizontal_layout)
         self.show()
 
-    def plot(self):
-        pass
+    def plot(self,time,amplitude):
+        self.signal_viewer.plot(time,amplitude)
     def stem_plot(self):
         pass
     def update_plot(self):
