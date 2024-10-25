@@ -19,7 +19,7 @@ class Viewer(QWidget):
         # Set the figure's background color
         self.figure.patch.set_facecolor('black')
         time=np.linspace(0, 2, 1000)
-        f=4
+        f=10
         x_t = np.cos(2*np.pi*f*time)
         t_sampled = np.arange(0,2,1/8)
         x_t_sampled=np.cos(2*np.pi*f*t_sampled)
