@@ -1,7 +1,9 @@
 import numpy as np
+import pandas as pd
 import pyqtgraph as pg
+import scipy
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QWidget, QPushButton, QVBoxLayout, QSlider, QComboBox, QLabel, \
-    QFormLayout, QTableWidget, QTableWidgetItem, QHeaderView
+    QFormLayout, QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog, QMessageBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QFont
 import sys
@@ -18,6 +20,12 @@ class GUI(QWidget):
         # Create a horizontal layout and set it as the main layout
         horizontal_layout = QHBoxLayout()
         horizontal_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.data = []
+        self.time = []
+        self.amplitude = []
+        self.sampled_amplitude = []
+        self.sampling_frequency = 1
 
         # Create the GraphicsLayoutWidget and set minimum size
         self.window = pg.GraphicsLayoutWidget(show=True, title="Signal Studio")
@@ -65,8 +73,9 @@ class GUI(QWidget):
         # Create and add the upload button with an icon
         upload_button = QPushButton("Upload")
         upload_button.setIcon(QIcon(
-            "E:/cufe/biomedical department/3rd year/First Term/DSP/Task2/Signal-Studio/Icons/file-upload-icon.webp"))
+            "C:/Users/DELL/PycharmProjects/pythonProject1/New folder/file-upload-icon.webp"))
         upload_button.setStyleSheet("font-size: 14px; padding: 10px;")
+        upload_button.clicked.connect(self.upload_signal)
         toolbar_layout.addWidget(upload_button)
 
         # Add stretch to ensure equal spacing after the button
@@ -107,8 +116,8 @@ class GUI(QWidget):
 
             # Create the slider
             slider = QSlider(Qt.Horizontal)
-            slider.setRange(0, 100)  # Set range (0 to 100)
-            slider.setValue(default_value)  # Set default value
+            slider.setRange(1, 40)  # Set range (0 to 100)
+            slider.setValue(0)  # Set default value
             slider.setStyleSheet("""
             QSlider::groove:horizontal {
                 border: 1px solid #999999;
@@ -150,16 +159,19 @@ class GUI(QWidget):
             slider_layout.addWidget(slider)
             slider_layout.addWidget(value_label)
 
-            return slider_layout
+            return slider,slider_layout
 
         # Create and add the Sampling Frequency slider
-        toolbar_layout.addLayout(create_slider("Sampling Frequency", 50))
+        self.frequency_slider,slider_layout = create_slider("Sampling Frequency", 50)
+        self.frequency_slider.valueChanged.connect(self.update_stem_plot)
+        toolbar_layout.addLayout(slider_layout)
 
         # Add a stretch after the first slider layout
         toolbar_layout.addStretch(1)
 
         # Create and add the SNR slider
-        toolbar_layout.addLayout(create_slider("SNR", 50))
+        self.SNR_slider , SNR_slider_layout = create_slider('SNR',50)
+        toolbar_layout.addLayout(SNR_slider_layout)
 
         # Add a stretch after the second slider layout
         toolbar_layout.addStretch(1)
@@ -206,21 +218,81 @@ class GUI(QWidget):
         # Set the main layout for the window
         self.setLayout(horizontal_layout)
 
+    def upload_signal(self):
+        options = QFileDialog.Options()
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)",
+                                                   options=options)
+        if file_path:
+            try:
+                self.data = pd.read_csv(file_path)
+                self.start()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to load CSV file:\n{e}")
+
+    def start(self):
+        self.time = self.data.iloc[:, 0]
+        self.amplitude = self.data.iloc[:, 1]
+        self.take_samples(self.time, self.amplitude, self.sampling_frequency)
+        self.stem_plot(self.samples, self.sampled_amplitude)
+        self.plot(self.time, self.amplitude)
+        self.reconstruct(self.samples, self.sampled_amplitude)
+
     def plot(self, time, amplitude):
-        self.signal_viewer.clear()
-        self.signal_viewer.plot(time, amplitude)
+        # Plot the original signal if not already plotted
+        if not hasattr(self, 'original_plot') or self.original_plot is None:
+            self.original_plot = self.signal_viewer.plot(time, amplitude, pen='b')
+        else:
+            self.original_plot.setData(time, amplitude)  # Update data if plot already exists
 
-    def stem_plot(self):
-        pass  # Implement functionality as needed
+    def stem_plot(self, time, amplitude):
+        # Clear previous sampled plots, including vertical lines and dots
+        if hasattr(self, 'sampled_items'):
+            for item in self.sampled_items:
+                self.signal_viewer.removeItem(item)
 
-    def update_plot(self):
-        pass  # Implement functionality as needed
+        # Create a list to store the new sampled plot items (vertical lines and dots)
+        self.sampled_items = []
+
+        # Plot vertical lines and sample dots for the sampled signal
+        for x, y in zip(time, amplitude):
+            # Plot and store each vertical line
+            line = self.signal_viewer.plot([x, x], [0, y], pen=pg.mkPen('w'))
+            self.sampled_items.append(line)
+
+        # Plot and store dots as a single item
+        dots = self.signal_viewer.plot(time, amplitude, pen=None, symbol='o', symbolBrush='w')
+        self.sampled_items.append(dots)
+
+    def update_stem_plot(self):
+        self.sampling_frequency = self.frequency_slider.value()
+        print(self.calculate_max_frequency(self.amplitude))
+        print(self.sampling_frequency)
+        self.take_samples(self.time, self.amplitude, self.sampling_frequency)
+        self.stem_plot(self.samples, self.sampled_amplitude)
+        self.reconstruct(self.samples, self.sampled_amplitude)
+
+    def calculate_max_frequency(self, amplitude):
+        # Use FFT to find the maximum frequency component
+        spectrum = np.fft.fft(amplitude)
+        freqs = np.fft.fftfreq(len(amplitude), d=(self.time[1] - self.time[0]))  # Assuming uniform sampling
+        max_freq = np.abs(freqs[np.argmax(np.abs(spectrum))])
+        return max_freq
+
+    def take_samples(self, time, amplitude, sampling_frequency):
+        self.samples = np.arange(time[0], time[len(time) - 1], (1 / sampling_frequency))
+        self.sampled_amplitude = np.interp(self.samples, time, amplitude)
+        self.plot(self.time, self.amplitude)
+
+    def reconstruct(self, samples, sampled_amplitude):
+        self.reconstruction_viewer.clear()
+        reconstructed_amplitude, reconstructed_time = scipy.signal.resample(sampled_amplitude, 5000, samples)
+        self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
 
     def get_difference_plot(self, plot1, plot2):
-        pass  # Implement functionality as needed
+        pass
 
     def plot_frequency(self, frequency_plot):
-        pass  # Implement functionality as needed
+        pass
 
 
 if __name__ == "__main__":
