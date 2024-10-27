@@ -3,7 +3,7 @@ import pandas as pd
 import pyqtgraph as pg
 import scipy
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QWidget, QPushButton, QVBoxLayout, QSlider, QComboBox, QLabel, \
-    QFormLayout, QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog, QMessageBox , QGroupBox
+    QFormLayout, QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog, QMessageBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QFont
 import sys
@@ -71,64 +71,31 @@ class GUI(QWidget):
         toolbar_layout.setContentsMargins(50, 50, 50, 50)
 
         # Create and add the upload button with an icon
-
-        # First Section: Upload Button in a grey square
-        upload_box = QGroupBox()
-        upload_box.setStyleSheet("background-color: #d3d3d3; padding: 20px;")
-        upload_layout = QVBoxLayout()
         upload_button = QPushButton("Upload")
         upload_button.setIcon(QIcon(
-            "E:/cufe/biomedical department/3rd year/First Term/DSP/Task2/Signal-Studio/Icons/file-upload-icon.webp"))
+            "C:/Users/DELL/PycharmProjects/pythonProject1/New folder/file-upload-icon.webp"))
         upload_button.setStyleSheet("font-size: 14px; padding: 10px;")
-        upload_layout.addWidget(upload_button)
-        upload_box.setLayout(upload_layout)
-        toolbar_layout.addWidget(upload_box)
         upload_button.clicked.connect(self.upload_signal)
-
+        toolbar_layout.addWidget(upload_button)
 
         # Add stretch to ensure equal spacing after the button
         toolbar_layout.addStretch(1)
 
-
-        #second section
-        table_box = QGroupBox("Signal Info")  # Set the title
-        table_box.setStyleSheet("background-color: #d3d3d3; padding: 20px; font-size: 16px; font-weight: bold;")
-        table_layout = QVBoxLayout()
-
-        # Configure the table widget
+        # Create a table widget for signal information
         signal_info_table = QTableWidget()
-        signal_info_table.setColumnCount(3)
+        signal_info_table.setColumnCount(3)  # Set the number of columns to 3
         signal_info_table.setHorizontalHeaderLabels(["Name", "Frequency", "Amplitude"])
-        signal_info_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        signal_info_table.setEditTriggers(QTableWidget.NoEditTriggers)  # Make the table read-only
+        signal_info_table.horizontalHeader().setDefaultSectionSize(150)  # Set header width
+        signal_info_table.horizontalHeader().setFont(QFont("Arial", 14, QFont.Bold))  # Set header font size
+        signal_info_table.verticalHeader().setDefaultSectionSize(30)  # Set header height
 
-        # Increase table size
-        signal_info_table.setMinimumHeight(300)
-        signal_info_table.setMaximumHeight(400)
+        # Adjust column widths to fit content
+        signal_info_table.resizeColumnsToContents()
+        signal_info_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Stretch)  # Stretch the table to fill the layout
 
-        # Style the header and ensure it appears
-        header = signal_info_table.horizontalHeader()
-        header.setFont(QFont("Arial", 14, QFont.Bold))
-        header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        header.setSectionResizeMode(QHeaderView.Stretch)  # Adjust to stretch headers
-        header.setVisible(True)  # Ensure header visibility
-        header = signal_info_table.horizontalHeader()
-        header.setStyleSheet("""
-                    QHeaderView::section {
-                        padding: 8px;
-                        background-color: #e0e0e0;
-                        color: #333333;
-                        font-size: 14px;
-                        border: 1px solid #cccccc;
-                    }
-                """)
-
-        # Set minimum height for the header
-        header.setMinimumHeight(80)
-        # Adjust row height and add data
-        signal_info_table.verticalHeader().setDefaultSectionSize(35)  # Set row height
-        signal_info_table.setWordWrap(False)  # Ensure text doesn't wrap in cells
-
-        #pavly upload signal to table here
+        # Set initial table data
         signal_info_table.insertRow(0)
         signal_info_table.setItem(0, 0, QTableWidgetItem("Signal 1"))
         signal_info_table.setItem(0, 1, QTableWidgetItem("2 Hz"))
@@ -139,119 +106,128 @@ class GUI(QWidget):
         signal_info_table.setItem(1, 1, QTableWidgetItem("5 Hz"))
         signal_info_table.setItem(1, 2, QTableWidgetItem("10"))
 
-        # Center-align the cell content
-        for row in range(signal_info_table.rowCount()):
-            for col in range(signal_info_table.columnCount()):
-                signal_info_table.item(row, col).setTextAlignment(Qt.AlignCenter)
+        # Add the table to the toolbar layout
+        toolbar_layout.addWidget(signal_info_table)
 
-        table_layout.addWidget(signal_info_table)
-        table_box.setLayout(table_layout)
-        table_box.setMinimumHeight(400)  # Increase section height
-        toolbar_layout.addWidget(table_box)
-
-        # Third Section: Sliders and Dropdowns in a smaller grey square
-        controls_box = QGroupBox("Control Unit")  # Set the title
-        controls_box.setStyleSheet("background-color: #d3d3d3; padding: 20px; font-size: 16px; font-weight: bold;")
-        controls_layout = QVBoxLayout()
-        controls_box.setMinimumHeight(200)  # Reduce height of this section
-
-        # Slider function with increased label height
+        # Function to create a slider with a value label
         def create_slider(label_text, default_value):
+            # Create a vertical layout for the slider and label
             slider_layout = QVBoxLayout()
-            slider_label = QLabel(label_text)
-            slider_label.setFixedHeight(25)  # Increased label height for readability
+
+            # Create the slider
             slider = QSlider(Qt.Horizontal)
-            slider.setRange(0, 100)
-            slider.setValue(default_value)
+            slider.setRange(1, 40)  # Set range (0 to 100)
+            slider.setValue(0)  # Set default value
             slider.setStyleSheet("""
-                       QSlider::groove:horizontal {
-                           border: 1px solid #999999;
-                           height: 8px;
-                           background: #f0f0f0;
-                           margin: 2px 0;
-                       }
-                       QSlider::handle:horizontal {
-                           background: #ffffff;
-                           border: 1px solid #5c5c5c;
-                           width: 18px;
-                           margin: -2px 0;
-                           border-radius: 3px;
-                       }
-                       QSlider::sub-page:horizontal {
-                           background: black;
-                           border: 1px solid #777;
-                           height: 8px;
-                           border-radius: 2px;
-                       }
-                       QSlider::add-page:horizontal {
-                           background: #f0f0f0;
-                           border: 1px solid #777;
-                           height: 8px;
-                           border-radius: 2px;
-                       }
-                   """)
+            QSlider::groove:horizontal {
+                border: 1px solid #999999;
+                height: 8px;
+                background: #f0f0f0;
+                margin: 2px 0;
+            }
+            QSlider::handle:horizontal {
+                background: #ffffff;
+                border: 1px solid #5c5c5c;
+                width: 18px;
+                margin: -2px 0;
+                border-radius: 3px;
+            }
+            QSlider::sub-page:horizontal {
+                background: black;
+                border: 1px solid #777;
+                height: 8px;
+                border-radius: 2px;
+            }
+            QSlider::add-page:horizontal {
+                background: #f0f0f0;
+                border: 1px solid #777;
+                height: 8px;
+                border-radius: 2px;
+            }
+            """)
+
+            # Create a label for the slider value
             value_label = QLabel(f"{default_value}")
-            value_label.setFixedHeight(25)  # Increased value label height for readability
             value_label.setAlignment(Qt.AlignCenter)
+            value_label.setStyleSheet("font-size: 12px; padding: 5px;")
+
+            # Connect the slider's valueChanged signal to update the label
             slider.valueChanged.connect(lambda value: value_label.setText(f"{value}"))
-            slider_layout.addWidget(slider_label)
+
+            # Add the label and slider to the vertical layout
+            slider_layout.addWidget(QLabel(label_text))  # Add label above the slider
             slider_layout.addWidget(slider)
             slider_layout.addWidget(value_label)
-            return slider , slider_layout
 
-        self.frequency_slider, frequency_slider_layout = create_slider("Sampling Frequency", 0)
-        controls_layout.addLayout(frequency_slider_layout)
+            return slider,slider_layout
+
+        # Create and add the Sampling Frequency slider
+        self.frequency_slider,slider_layout = create_slider("Sampling Frequency", 50)
         self.frequency_slider.valueChanged.connect(self.update_stem_plot)
+        toolbar_layout.addLayout(slider_layout)
 
-        self.SNR_slider, SNR_slider_layout = create_slider('SNR', 0)
-        controls_layout.addLayout(SNR_slider_layout)
-        self.SNR_slider.valueChanged.connect(lambda: self.update_plot_with_noise())
+        # Add a stretch after the first slider layout
+        toolbar_layout.addStretch(1)
 
-        # Dropdowns with increased padding and height
-        dropdown_layout = QFormLayout()
-        dropdown_layout.setSpacing(10)
+        # Create and add the SNR slider
+        self.SNR_slider , SNR_slider_layout = create_slider('SNR',50)
+        toolbar_layout.addLayout(SNR_slider_layout)
+
+        # Add a stretch after the second slider layout
+        toolbar_layout.addStretch(1)
+
+        # Create the dropdown list for methods
         self.method_dropdown = QComboBox()
         self.method_dropdown.addItems(["Method1", "Method2", "Method3"])
-        self.method_dropdown.setStyleSheet("padding: 5px; height: 30px;")  # Increase padding and height
+        self.method_dropdown.setStyleSheet("font-size: 12px; padding: 5px;")
 
+        # Create the dropdown list for selecting the type
         self.type_dropdown = QComboBox()
-        self.type_dropdown.addItems(["Linear", "Sinusoid"])
-        self.type_dropdown.setStyleSheet("padding: 5px; height: 30px;")  # Increase padding and height
+        self.type_dropdown.addItems(["Linear", "Sinusoid"])  # Add options to the combobox
+        self.type_dropdown.setStyleSheet("font-size: 12px; padding: 5px;")
 
-        # Add space above each ComboBox label to prevent label cutoff
+        # Create a form layout for the dropdowns
+        dropdown_layout = QFormLayout()
+
         method_label = QLabel("Select Method")
-        method_label.setFixedHeight(30)  # Increased label height for visibility
+        method_label.setAlignment(Qt.AlignCenter)
+        method_label.setStyleSheet("font-size: 12px; padding: 5px;")
+
+        type_label = QLabel("Reconstruction Method")
+        type_label.setAlignment(Qt.AlignCenter)
+        type_label.setStyleSheet("font-size: 12px; padding: 5px;")
+
+        # Add the labels and comboboxes to the form layout
         dropdown_layout.addRow(method_label, self.method_dropdown)
+        dropdown_layout.addRow(type_label, self.type_dropdown)
 
-        reconstruction_label = QLabel("Reconstruction Method")
-        reconstruction_label.setFixedHeight(30)  # Increased label height for visibility
-        dropdown_layout.addRow(reconstruction_label, self.type_dropdown)
+        # Add the form layout to the toolbar layout
+        toolbar_layout.addLayout(dropdown_layout)
 
-        controls_layout.addLayout(dropdown_layout)
+        # Add a final stretch at the bottom for spacing
+        toolbar_layout.addStretch(1)
 
-        controls_box.setLayout(controls_layout)
-        toolbar_layout.addWidget(controls_box)
-
-        # Add resizing behavior for consistent layout
+        # Create a widget to contain the toolbar layout
         toolbar_widget = QWidget()
         toolbar_widget.setLayout(toolbar_layout)
-        toolbar_widget.setStyleSheet("background-color: #ffffff; padding: 10px;")
+        toolbar_widget.setStyleSheet("background-color: #f0f0f0; padding: 10px;")
 
+        # Add the toolbar widget to the main horizontal layout
         horizontal_layout.addWidget(toolbar_widget)
 
+        # Set the main layout for the window
         self.setLayout(horizontal_layout)
 
-
     def upload_signal(self):
-            options = QFileDialog.Options()
-            file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)",
-                                                       options=options)
-            if file_path:
-                try:
-                    self.data = pd.read_csv(file_path)
-                    self.start()
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Failed to load CSV file:\n{e}")
+        options = QFileDialog.Options()
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)",
+                                                   options=options)
+        if file_path:
+            try:
+                self.data = pd.read_csv(file_path)
+                self.start()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to load CSV file:\n{e}")
 
     def start(self):
         self.time = self.data.iloc[:, 0]
@@ -289,21 +265,18 @@ class GUI(QWidget):
 
     def update_stem_plot(self):
         self.sampling_frequency = self.frequency_slider.value()
-        #print(self.calculate_max_frequency(self.amplitude))
+        print(self.calculate_max_frequency(self.amplitude))
         print(self.sampling_frequency)
         self.take_samples(self.time, self.amplitude, self.sampling_frequency)
         self.stem_plot(self.samples, self.sampled_amplitude)
         self.reconstruct(self.samples, self.sampled_amplitude)
 
-    '''
-        def calculate_max_frequency(self, amplitude):
+    def calculate_max_frequency(self, amplitude):
         # Use FFT to find the maximum frequency component
         spectrum = np.fft.fft(amplitude)
         freqs = np.fft.fftfreq(len(amplitude), d=(self.time[1] - self.time[0]))  # Assuming uniform sampling
         max_freq = np.abs(freqs[np.argmax(np.abs(spectrum))])
         return max_freq
-
-    '''
 
     def take_samples(self, time, amplitude, sampling_frequency):
         self.samples = np.arange(time[0], time[len(time) - 1], (1 / sampling_frequency))

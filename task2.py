@@ -445,11 +445,17 @@ class GUI(QWidget):
 
     def update_stem_plot(self):
         self.sampling_frequency = self.frequency_slider.value()
-        print(self.calculate_max_frequency(self.amplitude))
-        print(self.sampling_frequency)
-        self.take_samples(self.time, self.amplitude, self.sampling_frequency)
-        self.stem_plot(self.samples, self.sampled_amplitude)
-        self.reconstruct(self.samples, self.sampled_amplitude)
+        try:
+            self.take_samples(self.time, self.amplitude, self.sampling_frequency)
+            self.stem_plot(self.samples, self.sampled_amplitude)
+            self.reconstruct(self.samples, self.sampled_amplitude)
+        except:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Information)
+            msg_box.setText("Upload Signal first")
+            msg_box.setWindowTitle("Upload Error !")
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            msg_box.exec_()
 
     def calculate_max_frequency(self, amplitude):
         # Use FFT to find the maximum frequency component
