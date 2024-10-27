@@ -442,7 +442,7 @@ class GUI(QWidget):
         # Plot and store dots as a single item
         dots = self.signal_viewer.plot(time, amplitude, pen=None, symbol='o', symbolBrush='w')
         self.sampled_items.append(dots)
-
+    # handling Error in slider change without signal upload
     def update_stem_plot(self):
         self.sampling_frequency = self.frequency_slider.value()
         try:
