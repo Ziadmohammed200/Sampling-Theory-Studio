@@ -5,7 +5,8 @@ import pandas as pd
 import pyqtgraph as pg
 import scipy
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QWidget, QPushButton, QVBoxLayout, QSlider, QComboBox, QLabel, \
-    QFormLayout, QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog, QMessageBox, QLineEdit, QGroupBox
+    QFormLayout, QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog, QMessageBox, QLineEdit, QGroupBox, \
+    QSizePolicy
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QFont
 import sys
@@ -188,207 +189,208 @@ class GUI(QWidget):
 
         # Create a vertical layout for the toolbar
         # Create a vertical layout for the toolbar
-        # Create a vertical layout for the toolbar
+        # Initialize the main layout for the toolbar
         toolbar_layout = QVBoxLayout()
         toolbar_layout.setContentsMargins(50, 50, 50, 50)
 
         # First Section: Upload Button in a grey square
         upload_box = QGroupBox()
+        upload_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         upload_box.setStyleSheet("background-color: #d3d3d3; padding: 20px;")
         upload_layout = QVBoxLayout()
         upload_button = QPushButton("Upload")
-        upload_button.setIcon(QIcon(
-            "E:/cufe/biomedical department/3rd year/First Term/DSP/Task2/Signal-Studio/Icons/file-upload-icon.webp"))
-        upload_button.setStyleSheet("font-size: 14px; padding: 10px;")
+        upload_button.setIcon(QIcon("path/to/icon.png"))
+        upload_button.setStyleSheet("""
+            font-size: 14px; 
+            padding: 10px;
+            background-color: #2196F3; 
+            color: white; 
+            border-radius: 5px;
+        """)
         upload_layout.addWidget(upload_button)
         upload_box.setLayout(upload_layout)
         toolbar_layout.addWidget(upload_box)
         upload_button.clicked.connect(lambda: self.signal_manager.upload_signal(self))
 
-        # Add stretch to ensure equal spacing after the button
         toolbar_layout.addStretch(1)
 
-        # second section
-        table_box = QGroupBox("Signal Info")  # Set the title
+        # Second Section: Signal Info Table
+        table_box = QGroupBox("Signal Info")
+        table_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # Allows both horizontal and vertical expansion
         table_box.setStyleSheet("background-color: #d3d3d3; padding: 20px; font-size: 16px; font-weight: bold;")
         table_layout = QVBoxLayout()
 
-        # Configure the table widget
         self.signal_info_table = QTableWidget()
+        self.signal_info_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.signal_info_table.setColumnCount(3)
         self.signal_info_table.setHorizontalHeaderLabels(["Name", "Frequency", "Amplitude"])
         self.signal_info_table.setEditTriggers(QTableWidget.NoEditTriggers)
-
-        # Increase table size
         self.signal_info_table.setMinimumHeight(300)
         self.signal_info_table.setMaximumHeight(400)
 
-        # Style the header and ensure it appears
         header = self.signal_info_table.horizontalHeader()
         header.setFont(QFont("Arial", 14, QFont.Bold))
         header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        header.setSectionResizeMode(QHeaderView.Stretch)  # Adjust to stretch headers
-        header.setVisible(True)  # Ensure header visibility
-        header = self.signal_info_table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.Stretch)
         header.setStyleSheet("""
-                           QHeaderView::section {
-                               padding: 8px;
-                               background-color: #e0e0e0;
-                               color: #333333;
-                               font-size: 14px;
-                               border: 1px solid #cccccc;
-                           }
-                       """)
-
-        # Set minimum height for the header
+            QHeaderView::section {
+                padding: 8px;
+                background-color: #e0e0e0;
+                color: #333333;
+                font-size: 14px;
+                border: 1px solid #cccccc;
+            }
+        """)
         header.setMinimumHeight(80)
-        # Adjust row height and add data
-        self.signal_info_table.verticalHeader().setDefaultSectionSize(35)  # Set row height
-        self.signal_info_table.setWordWrap(False)  # Ensure text doesn't wrap in cells
-
-        # pavly upload signal to table here
-        # signal_info_table.insertRow(0)
-        # signal_info_table.setItem(0, 0, QTableWidgetItem("Signal 1"))
-        # signal_info_table.setItem(0, 1, QTableWidgetItem("2 Hz"))
-        # signal_info_table.setItem(0, 2, QTableWidgetItem("3"))
-        #
-        # signal_info_table.insertRow(1)
-        # signal_info_table.setItem(1, 0, QTableWidgetItem("Signal 2"))
-        # signal_info_table.setItem(1, 1, QTableWidgetItem("5 Hz"))
-        # signal_info_table.setItem(1, 2, QTableWidgetItem("10"))
-
-
-        # Center-align the cell content
-        for row in range(self.signal_info_table.rowCount()):
-            for col in range(self.signal_info_table.columnCount()):
-                self.signal_info_table.item(row, col).setTextAlignment(Qt.AlignCenter)
+        self.signal_info_table.setWordWrap(False)
 
         table_layout.addWidget(self.signal_info_table)
+        table_layout.setSizeConstraint(250)
         table_box.setLayout(table_layout)
-        table_box.setMinimumHeight(400)  # Increase section height
+        table_box.setMinimumHeight(340)  # Reduced overall height
         toolbar_layout.addWidget(table_box)
 
-        # Third Section: Sliders and Dropdowns in a smaller grey square
-        controls_box = QGroupBox("Control Unit")  # Set the title
+        toolbar_layout.addSpacing(30)
+
+        # Third Section: Control Unit with Sliders, Dropdowns, and Additional Controls
+        controls_box = QGroupBox("Control Unit")
+        controls_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         controls_box.setStyleSheet("background-color: #d3d3d3; padding: 20px; font-size: 16px; font-weight: bold;")
         controls_layout = QVBoxLayout()
-        controls_box.setMinimumHeight(200)  # Reduce height of this section
 
-        # Slider function with increased label height
+        # Slider creation function with adjusted spacing
         def create_slider(label_text, default_value):
             slider_layout = QVBoxLayout()
+            slider_layout.setSpacing(2)  # Adjusted for tighter layout
             slider_label = QLabel(label_text)
-            slider_label.setFixedHeight(25)  # Increased label height for readability
+            slider_label.setFixedHeight(20)
+            slider_label.setStyleSheet("font-size: 14px; color: #333333;")
+
             slider = QSlider(Qt.Horizontal)
             slider.setRange(0, 100)
             slider.setValue(default_value)
+            slider.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             slider.setStyleSheet("""
-                              QSlider::groove:horizontal {
-                                  border: 1px solid #999999;
-                                  height: 8px;
-                                  background: #f0f0f0;
-                                  margin: 2px 0;
-                              }
-                              QSlider::handle:horizontal {
-                                  background: #ffffff;
-                                  border: 1px solid #5c5c5c;
-                                  width: 18px;
-                                  margin: -2px 0;
-                                  border-radius: 3px;
-                              }
-                              QSlider::sub-page:horizontal {
-                                  background: black;
-                                  border: 1px solid #777;
-                                  height: 8px;
-                                  border-radius: 2px;
-                              }
-                              QSlider::add-page:horizontal {
-                                  background: #f0f0f0;
-                                  border: 1px solid #777;
-                                  height: 8px;
-                                  border-radius: 2px;
-                              }
-                          """)
+                QSlider::groove:horizontal { height: 8px; background: #f0f0f0; }
+                QSlider::handle:horizontal { width: 8px; background: #2196F3; }
+                QSlider::sub-page:horizontal { background: black; }
+            """)
+
             value_label = QLabel(f"{default_value}")
-            value_label.setFixedHeight(25)  # Increased value label height for readability
+            value_label.setFixedHeight(20)
             value_label.setAlignment(Qt.AlignCenter)
             slider.valueChanged.connect(lambda value: value_label.setText(f"{value}"))
+
+            # Arrange label, slider, and value in a vertical layout
             slider_layout.addWidget(slider_label)
             slider_layout.addWidget(slider)
             slider_layout.addWidget(value_label)
+
             return slider, slider_layout
 
         self.frequency_slider, frequency_slider_layout = create_slider("Sampling Frequency", 2)
         controls_layout.addLayout(frequency_slider_layout)
         self.frequency_slider.valueChanged.connect(self.update_stem_plot)
 
-        self.SNR_slider, SNR_slider_layout = create_slider('SNR', 40)
+        self.SNR_slider, SNR_slider_layout = create_slider("SNR", 40)
         controls_layout.addLayout(SNR_slider_layout)
         self.SNR_slider.valueChanged.connect(lambda: self.update_plot_with_noise())
 
-        # Dropdowns with increased padding and height
         dropdown_layout = QFormLayout()
-        dropdown_layout.setSpacing(10)
-        self.method_dropdown = QComboBox()
-        self.method_dropdown.addItems(["Method1", "Method2", "Method3"])
-        self.method_dropdown.setStyleSheet("padding: 5px; height: 30px;")  # Increase padding and height
+        dropdown_layout.setHorizontalSpacing(10)
 
         self.type_dropdown = QComboBox()
         self.type_dropdown.addItems(["Linear", "Sinusoid"])
-        self.type_dropdown.setStyleSheet("padding: 5px; height: 30px;")  # Increase padding and height
-
-        # Add space above each ComboBox label to prevent label cutoff
-        method_label = QLabel("Select Method")
-        method_label.setFixedHeight(30)  # Increased label height for visibility
-        dropdown_layout.addRow(method_label, self.method_dropdown)
+        self.type_dropdown.setStyleSheet("padding: 5px; height: 30px;")
+        self.type_dropdown.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         reconstruction_label = QLabel("Reconstruction Method")
-        reconstruction_label.setFixedHeight(30)  # Increased label height for visibility
+        reconstruction_label.setFixedHeight(20)
+        reconstruction_label.setStyleSheet("font-size: 14px; color: #333333;")
+
         dropdown_layout.addRow(reconstruction_label, self.type_dropdown)
 
         controls_layout.addLayout(dropdown_layout)
 
+        # Additional controls
+        adding_signal_box = QGroupBox("Adding Signal")
+        adding_signal_box.setStyleSheet("""
+            QGroupBox {
+                font-size: 16px;
+                font-weight: bold;
+                color: #333333;
+                padding: 10px;
+                border: 2px solid #2196F3;
+                border-radius: 5px;
+                margin-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 0 3px;
+            }
+        """)
+
+        # Layout for Adding Signal section
+        adding_signal_layout = QVBoxLayout()
+
+        # Frequency and Amplitude Labels and Input Fields
+        frequency_label = QLabel("Frequency:")
+        frequency_label.setFixedWidth(120)
+        frequency_label.setStyleSheet("font-size: 14px; color: #333333; padding-right: 10px;")
+        self.freq_input = QLineEdit("1")
+        self.freq_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.freq_input.setStyleSheet("padding: 5px;")
+
+        amplitude_label = QLabel("Amplitude:")
+        amplitude_label.setFixedWidth(120)
+        amplitude_label.setStyleSheet("font-size: 14px; color: #333333; padding-right: 10px;")
+        self.amplitude_input = QLineEdit("1")
+        self.amplitude_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.amplitude_input.setStyleSheet("padding: 5px;")
+
+        # Add Signal Button
+        add_signal_button = QPushButton("Add Signal")
+        add_signal_button.setStyleSheet(
+            "font-size: 14px; padding: 10px; background-color: #2196F3; color: white; border-radius: 5px;")
+        add_signal_button.clicked.connect(
+            lambda: self.signal_manager.add_signal_component(self.freq_input.text(), self.amplitude_input.text(), self))
+
+        input_form = QFormLayout()
+        input_form.setHorizontalSpacing(5)
+        input_form.addRow(frequency_label, self.freq_input)
+        input_form.addRow(amplitude_label, self.amplitude_input)
+
+
+        # Add Widgets to Adding Signal Layout
+        adding_signal_layout.addLayout(input_form)
+        adding_signal_layout.addWidget(add_signal_button)
+
+        # Set Layout and Add to Controls Layout
+        adding_signal_box.setLayout(adding_signal_layout)
+        controls_layout.addWidget(adding_signal_box)
+
+        clear_button = QPushButton("Clear")
+        clear_button.setStyleSheet(
+            "font-size: 14px; padding: 10px; background-color: #2196F3; color: white; border-radius: 5px;")
+
+        # Form layout for labels and input fields
+
+        controls_layout.addWidget(add_signal_button)
+        controls_layout.addWidget(clear_button)
+
         controls_box.setLayout(controls_layout)
         toolbar_layout.addWidget(controls_box)
 
-        # Add resizing behavior for consistent layout
+        # Container widget for layout
         toolbar_widget = QWidget()
         toolbar_widget.setLayout(toolbar_layout)
-        toolbar_widget.setStyleSheet("background-color: #ffffff; padding: 10px;")
-
-        horizontal_layout.addWidget(toolbar_widget)
-
-
-
-        # Add a final stretch at the bottom for spacing
-        toolbar_layout.addStretch(1)
-        frequency_label = QLabel("Frequency:")
-        self.freq_input = QLineEdit()
-        self.freq_input.setText("1")
-        amplitude_label = QLabel("Amplitude:")
-        self.amplitude_input = QLineEdit()
-        self.amplitude_input.setText("1")
-
-        add_signal_button = QPushButton("Add Signal")
-        add_signal_button.clicked.connect(lambda: self.signal_manager.add_signal_component(
-        self.freq_input.text(), self.amplitude_input.text(), self))
-
-        toolbar_layout.addWidget(frequency_label)
-        toolbar_layout.addWidget(self.freq_input)
-        toolbar_layout.addWidget(amplitude_label)
-        toolbar_layout.addWidget(self.amplitude_input)
-        toolbar_layout.addWidget(add_signal_button)
-
-        # Create a widget to contain the toolbar layout
-        toolbar_widget = QWidget()
-        toolbar_widget.setLayout(toolbar_layout)
+        toolbar_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         toolbar_widget.setStyleSheet("background-color: #f0f0f0; padding: 10px;")
 
-        # Add the toolbar widget to the main horizontal layout
         horizontal_layout.addWidget(toolbar_widget)
-
-        # Set the main layout for the window
         self.setLayout(horizontal_layout)
+
     def add_signal_to_table( self,name, frequency, amplitude):
         """Insert a new row in the signal info table with the provided signal name, frequency, and amplitude."""
         row_position = self.signal_info_table.rowCount()
