@@ -10,6 +10,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QFont
 import sys
 
+from scipy.interpolate import interp1d
+
+
 class Signal:
     def __init__(self,name, amplitude, time, signal_id, signal_type, frequency=None):
         self.name=name
@@ -311,10 +314,10 @@ class GUI(QWidget):
         dropdown_layout.setHorizontalSpacing(10)
 
         self.type_dropdown = QComboBox()
-        self.type_dropdown.addItems(["Linear", "Sinusoid"])
+        self.type_dropdown.addItems(["Linear", "Quadratic", "Sinusoid"])  # Add options to the combobox
         self.type_dropdown.setStyleSheet("padding: 5px; height: 30px;")
         self.type_dropdown.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
+        self.type_dropdown.currentIndexChanged.connect(self.update_reconstruction)
         reconstruction_label = QLabel("Reconstruction Method")
         reconstruction_label.setFixedHeight(20)
         reconstruction_label.setStyleSheet("font-size: 14px; color: #333333;")
@@ -404,6 +407,48 @@ class GUI(QWidget):
 
         horizontal_layout.addWidget(toolbar_widget)
         self.setLayout(horizontal_layout)
+
+
+
+    def check_data_validity(self, samples, sampled_amplitude):
+        try:
+            # تحقق من أن البيانات في الشكل الصحيح والحجم المناسب
+            samples = np.array(samples)
+            sampled_amplitude = np.array(sampled_amplitude)
+            print(f"Checking Data - Samples: {samples}, Sampled Amplitude: {sampled_amplitude}")
+
+            if len(samples) < 2 or len(sampled_amplitude) < 2:
+                print("Error: Not enough data points for interpolation.")
+                return False
+
+            if np.any(np.isnan(samples)) or np.any(np.isnan(sampled_amplitude)):
+                print("Error: Data contains NaN values.")
+                return False
+
+            return True
+        except Exception as e:
+            print(f"Error during data validity check: {e}")
+            return False
+
+
+
+    def update_reconstruction(self):
+        print("Updating reconstruction...")
+
+        # تحويل البيانات إلى numpy arrays لضمان التوافق مع الدوال الحسابية
+        self.samples = np.array(self.samples)
+        self.sampled_amplitude = np.array(self.sampled_amplitude)
+
+        print(f"Before Reconstruction - Samples: {self.samples}, Sampled Amplitude: {self.sampled_amplitude}")
+
+        # التحقق من صحة البيانات قبل إعادة التشكيل
+        if self.check_data_validity(self.samples, self.sampled_amplitude):
+            # إعادة التشكيل بناءً على الطريقة المختارة
+            self.reconstruct(self.samples, self.sampled_amplitude)
+        else:
+            print("Data is not valid for reconstruction.")
+
+        print(f"After Reconstruction - Samples: {self.samples}, Sampled Amplitude: {self.sampled_amplitude}")
 
     def add_signal_to_table( self,name, frequency, amplitude):
         """Insert a new row in the signal info table with the provided signal name, frequency, and amplitude."""
@@ -537,16 +582,103 @@ class GUI(QWidget):
         self.sampled_amplitude = np.interp(self.samples, time, amplitude)
         self.plot(self.time, self.amplitude)
 
+    def linear_interpolation(self, x_known, y_known, num_points=500):
+        print(f"Linear Interpolation called with x_known: {x_known}")
+        print(f"Linear Interpolation called with y_known: {y_known}")
+
+        if len(x_known) < 2 or len(y_known) < 2:
+            print("Error: Not enough data points for interpolation.")
+            return None, None
+
+        try:
+            x_known = np.array(x_known)
+            y_known = np.array(y_known)
+
+            x_interp = np.linspace(np.min(x_known), np.max(x_known), num_points)
+            print(f"x_interp (size: {len(x_interp)}): {x_interp}")
+
+            linear_interp = interp1d(x_known, y_known, kind='linear')
+            print(f"linear_interp object created")
+
+            y_interp = linear_interp(x_interp)
+            print(f"y_interp (size: {len(y_interp)}): {y_interp}")
+
+            print("Linear interpolation completed successfully.")
+            return x_interp, y_interp
+        except ValueError as e:
+            print(f"ValueError during linear interpolation: {e}")
+            return None, None
+        except Exception as e:
+            print(f"Unexpected error during linear interpolation: {e}")
+            return None, None
+
+    def quadratic_interpolation(self, x_known, y_known, num_points=500):
+        print(f"Quadratic Interpolation called with x_known: {x_known}")
+        print(f"Quadratic Interpolation called with y_known: {y_known}")
+
+        if len(x_known) < 2 or len(y_known) < 2:
+            print("Error: Not enough data points for interpolation.")
+            return None, None
+
+        try:
+            x_interp = np.linspace(min(x_known), max(x_known), num_points)
+            quadratic_interp = interp1d(x_known, y_known, kind='quadratic')
+            y_interp = quadratic_interp(x_interp)
+            print("Quadratic interpolation completed successfully.")
+            return x_interp, y_interp
+        except Exception as e:
+            print(f"Error during quadratic interpolation: {e}")
+            return None, None
+
     def reconstruct(self, samples, sampled_amplitude):
+        print("Reconstructing signal...")
+
+
         self.reconstruction_viewer.clear()
-        reconstructed_amplitude, reconstructed_time = scipy.signal.resample(sampled_amplitude, 5000, samples)
-        self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
 
-    def get_difference_plot(self, plot1, plot2):
-        pass
 
-    def plot_frequency(self, frequency_plot):
-        pass
+        method = self.type_dropdown.currentText()
+
+        if method == "Linear":
+
+            reconstructed_time, reconstructed_amplitude = self.linear_interpolation(samples, sampled_amplitude)
+        elif method == "Quadratic":
+
+            reconstructed_time, reconstructed_amplitude = self.quadratic_interpolation(samples, sampled_amplitude)
+        else:
+
+            reconstructed_amplitude, reconstructed_time = scipy.signal.resample(sampled_amplitude, 5000, samples)
+
+        if reconstructed_time is not None and reconstructed_amplitude is not None:
+
+            self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
+            print("Reconstruction complete.")
+        else:
+            print("Reconstruction failed due to invalid data.")
+        self.plot_frequency(reconstructed_amplitude, reconstructed_time)
+        self.get_difference_plot()
+        self.difference_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='r')
+
+    def get_difference_plot(self):
+        self.difference_viewer.clear()
+        self.difference_viewer.plot(self.time, self.amplitude, pen='b')
+
+    def plot_frequency(self, reconstructed_amplitude, reconstructed_time):
+        N = len(reconstructed_amplitude)  # Number of samples
+        fourier_transform = np.fft.fft(reconstructed_amplitude)
+        # Take only the positive half
+        fourier_transform = fourier_transform[:]
+        freq = np.fft.fftfreq(N, d=(reconstructed_time[1] - reconstructed_time[0]))[:N // 2]
+        magnitude = np.abs(fourier_transform[:N // 2])
+        # Extract the real part of the Fourier transform for positive frequencies
+        # real_part = np.real(fourier_transform)
+
+        # Clear previous frequency plot
+        self.freq_viewer.clear()
+
+        # Plot frequency domain data using real part
+        self.freq_viewer.plot(freq, magnitude, pen='b')
+        self.freq_viewer.showGrid(x=True, y=True)
 
 
 if __name__ == "__main__":
