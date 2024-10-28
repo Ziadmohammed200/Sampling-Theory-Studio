@@ -1,4 +1,5 @@
 import GUI
+import os
 import numpy as np
 import pandas as pd
 import pyqtgraph as pg
@@ -10,7 +11,8 @@ from PyQt5.QtGui import QIcon, QFont
 import sys
 
 class Signal:
-    def __init__(self, amplitude, time, signal_id, signal_type, frequency=None):
+    def __init__(self,name, amplitude, time, signal_id, signal_type, frequency=None):
+        self.name=name
         self.amplitude = amplitude
         self.time = time
         self.frequency = frequency
@@ -47,10 +49,17 @@ class SignalManager:
 
                     time = data.iloc[:, 0]   # Normalize time to start at zero
                     amplitude = data.iloc[:, 1]
+                    frequency = data.iloc[:, 2]
+                    amp=data.iloc[:, 3]
+
+
+
+                    signal_name = os.path.splitext(os.path.basename(file_path))[0]
 
 
                     signal_id = self.next_signal_id
-                    signal = Signal(signal_id=signal_id, time=time, amplitude=amplitude, signal_type="UPLOADED")
+                    signal = Signal(name=signal_name,signal_id=signal_id, time=time, amplitude=amplitude, signal_type="UPLOADED")
+                    parent.add_signal_to_table(signal_name,frequency[1],amp[1])
 
                     self.signals.append(signal)
                     self.next_signal_id += 1
@@ -76,8 +85,10 @@ class SignalManager:
                 time = np.linspace(0, length / 1000, length)  # Default time array with sampling rate 1000 Hz
 
             amplitude = amplitude_value * np.sin(2 * np.pi * frequency * time)
+            signal_name= f"freq{str(frequency)} amp{str(amplitude_value)}"
 
-            signal = Signal(amplitude=amplitude, time=time, signal_id=signal_id, signal_type='sinusoidal', frequency=frequency)
+            signal = Signal(name=signal_name,amplitude=amplitude, time=time, signal_id=signal_id, signal_type='sinusoidal', frequency=frequency)
+            parent.add_signal_to_table(signal_name,str(frequency),str(amplitude_value))
 
             self.signals.append(signal)
             self.next_signal_id += 1
@@ -136,7 +147,7 @@ class GUI(QWidget):
         self.time = []
         self.amplitude = []
         self.sampled_amplitude = []
-        self.sampling_frequency = 1
+        self.sampling_frequency = 2
 
         # Create the GraphicsLayoutWidget and set minimum size
         self.window = pg.GraphicsLayoutWidget(show=True, title="Signal Studio")
@@ -203,22 +214,22 @@ class GUI(QWidget):
         table_layout = QVBoxLayout()
 
         # Configure the table widget
-        signal_info_table = QTableWidget()
-        signal_info_table.setColumnCount(3)
-        signal_info_table.setHorizontalHeaderLabels(["Name", "Frequency", "Amplitude"])
-        signal_info_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.signal_info_table = QTableWidget()
+        self.signal_info_table.setColumnCount(3)
+        self.signal_info_table.setHorizontalHeaderLabels(["Name", "Frequency", "Amplitude"])
+        self.signal_info_table.setEditTriggers(QTableWidget.NoEditTriggers)
 
         # Increase table size
-        signal_info_table.setMinimumHeight(300)
-        signal_info_table.setMaximumHeight(400)
+        self.signal_info_table.setMinimumHeight(300)
+        self.signal_info_table.setMaximumHeight(400)
 
         # Style the header and ensure it appears
-        header = signal_info_table.horizontalHeader()
+        header = self.signal_info_table.horizontalHeader()
         header.setFont(QFont("Arial", 14, QFont.Bold))
         header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         header.setSectionResizeMode(QHeaderView.Stretch)  # Adjust to stretch headers
         header.setVisible(True)  # Ensure header visibility
-        header = signal_info_table.horizontalHeader()
+        header = self.signal_info_table.horizontalHeader()
         header.setStyleSheet("""
                            QHeaderView::section {
                                padding: 8px;
@@ -232,26 +243,27 @@ class GUI(QWidget):
         # Set minimum height for the header
         header.setMinimumHeight(80)
         # Adjust row height and add data
-        signal_info_table.verticalHeader().setDefaultSectionSize(35)  # Set row height
-        signal_info_table.setWordWrap(False)  # Ensure text doesn't wrap in cells
+        self.signal_info_table.verticalHeader().setDefaultSectionSize(35)  # Set row height
+        self.signal_info_table.setWordWrap(False)  # Ensure text doesn't wrap in cells
 
         # pavly upload signal to table here
-        signal_info_table.insertRow(0)
-        signal_info_table.setItem(0, 0, QTableWidgetItem("Signal 1"))
-        signal_info_table.setItem(0, 1, QTableWidgetItem("2 Hz"))
-        signal_info_table.setItem(0, 2, QTableWidgetItem("3"))
+        # signal_info_table.insertRow(0)
+        # signal_info_table.setItem(0, 0, QTableWidgetItem("Signal 1"))
+        # signal_info_table.setItem(0, 1, QTableWidgetItem("2 Hz"))
+        # signal_info_table.setItem(0, 2, QTableWidgetItem("3"))
+        #
+        # signal_info_table.insertRow(1)
+        # signal_info_table.setItem(1, 0, QTableWidgetItem("Signal 2"))
+        # signal_info_table.setItem(1, 1, QTableWidgetItem("5 Hz"))
+        # signal_info_table.setItem(1, 2, QTableWidgetItem("10"))
 
-        signal_info_table.insertRow(1)
-        signal_info_table.setItem(1, 0, QTableWidgetItem("Signal 2"))
-        signal_info_table.setItem(1, 1, QTableWidgetItem("5 Hz"))
-        signal_info_table.setItem(1, 2, QTableWidgetItem("10"))
 
         # Center-align the cell content
-        for row in range(signal_info_table.rowCount()):
-            for col in range(signal_info_table.columnCount()):
-                signal_info_table.item(row, col).setTextAlignment(Qt.AlignCenter)
+        for row in range(self.signal_info_table.rowCount()):
+            for col in range(self.signal_info_table.columnCount()):
+                self.signal_info_table.item(row, col).setTextAlignment(Qt.AlignCenter)
 
-        table_layout.addWidget(signal_info_table)
+        table_layout.addWidget(self.signal_info_table)
         table_box.setLayout(table_layout)
         table_box.setMinimumHeight(400)  # Increase section height
         toolbar_layout.addWidget(table_box)
@@ -306,11 +318,11 @@ class GUI(QWidget):
             slider_layout.addWidget(value_label)
             return slider, slider_layout
 
-        self.frequency_slider, frequency_slider_layout = create_slider("Sampling Frequency", 0)
+        self.frequency_slider, frequency_slider_layout = create_slider("Sampling Frequency", 2)
         controls_layout.addLayout(frequency_slider_layout)
         self.frequency_slider.valueChanged.connect(self.update_stem_plot)
 
-        self.SNR_slider, SNR_slider_layout = create_slider('SNR', 0)
+        self.SNR_slider, SNR_slider_layout = create_slider('SNR', 40)
         controls_layout.addLayout(SNR_slider_layout)
         self.SNR_slider.valueChanged.connect(lambda: self.update_plot_with_noise())
 
@@ -377,6 +389,14 @@ class GUI(QWidget):
 
         # Set the main layout for the window
         self.setLayout(horizontal_layout)
+    def add_signal_to_table( self,name, frequency, amplitude):
+        """Insert a new row in the signal info table with the provided signal name, frequency, and amplitude."""
+        row_position = self.signal_info_table.rowCount()
+        self.signal_info_table.insertRow(row_position)
+
+        self.signal_info_table.setItem(row_position, 0, QTableWidgetItem(name))
+        self.signal_info_table.setItem(row_position, 1, QTableWidgetItem(f"{frequency} Hz"))
+        self.signal_info_table.setItem(row_position, 2, QTableWidgetItem(str(amplitude)))
 
     def plot_signals(self):
         if not self.signal_manager.signals:
