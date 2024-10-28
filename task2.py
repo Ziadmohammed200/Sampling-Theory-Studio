@@ -541,33 +541,12 @@ class GUI(QWidget):
         self.reconstruction_viewer.clear()
         reconstructed_amplitude, reconstructed_time = scipy.signal.resample(sampled_amplitude, 5000, samples)
         self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
-        self.plot_frequency(reconstructed_amplitude, reconstructed_time)
-        self.get_difference_plot()
-        self.difference_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='r')
 
+    def get_difference_plot(self, plot1, plot2):
+        pass
 
-    def get_difference_plot(self):
-        self.difference_viewer.clear()
-        self.difference_viewer.plot(self.time, self.amplitude, pen='b')
-
-
-
-    def plot_frequency(self, reconstructed_amplitude, reconstructed_time):
-        N = len(reconstructed_amplitude)  # Number of samples
-        fourier_transform = np.fft.fft(reconstructed_amplitude)
-        # Take only the positive half
-        fourier_transform = fourier_transform[:]
-        freq = np.fft.fftfreq(N, d=(reconstructed_time[1] - reconstructed_time[0]))[:N // 2]
-        magnitude = np.abs(fourier_transform[:N // 2])
-        # Extract the real part of the Fourier transform for positive frequencies
-        #real_part = np.real(fourier_transform)
-
-        # Clear previous frequency plot
-        self.freq_viewer.clear()
-
-        # Plot frequency domain data using real part
-        self.freq_viewer.plot(freq, magnitude, pen='b')
-        self.freq_viewer.showGrid(x=True, y=True)
+    def plot_frequency(self, frequency_plot):
+        pass
 
 
 if __name__ == "__main__":
