@@ -127,6 +127,9 @@ class SignalManager:
 
 
         return time, noisy_signal
+    def remove_signal(self, signal_id):
+        """Remove a signal by its ID."""
+        self.signals = [signal for signal in self.signals if signal.signal_id != signal_id]
 
 
 class GUI(QWidget):
@@ -377,6 +380,7 @@ class GUI(QWidget):
             "font-size: 14px; padding: 10px; background-color: #2196F3; color: white; border-radius: 5px;")
 
         # Form layout for labels and input fields
+        clear_button.clicked.connect(self.delete_selected_signal)
 
         controls_layout.addWidget(add_signal_button)
         controls_layout.addWidget(clear_button)
@@ -401,6 +405,36 @@ class GUI(QWidget):
         self.signal_info_table.setItem(row_position, 0, QTableWidgetItem(name))
         self.signal_info_table.setItem(row_position, 1, QTableWidgetItem(f"{frequency} Hz"))
         self.signal_info_table.setItem(row_position, 2, QTableWidgetItem(str(amplitude)))
+    def delete_selected_signal(self):
+        """Delete the selected signal from the table and SignalManager."""
+        selected_row = self.signal_info_table.currentRow()
+
+        if selected_row == -1:
+            QMessageBox.warning(self, "No Selection", "Please select a signal to delete.")
+            return
+
+        # Get signal ID (assuming name is unique)
+        signal_name = self.signal_info_table.item(selected_row, 0).text()
+        signal_id = next((signal.signal_id for signal in self.signal_manager.signals if signal.name == signal_name), None)
+
+        if signal_id is not None:
+            # Remove signal from SignalManager
+            self.signal_manager.remove_signal(signal_id)
+
+            # Remove row from table
+            self.signal_info_table.removeRow(selected_row)
+
+            # Update plot after deletion
+            self.signal_manager.plot_callback()
+            self.Clear()
+        else:
+            QMessageBox.warning(self, "Error", "Signal not found.")
+    def Clear(self):
+        if not self.signal_manager.signals:
+            self.signal_viewer.clear()
+            self.reconstruction_viewer.clear()
+            self.difference_viewer.clear()
+            self.freq_viewer.clear()
 
     def plot_signals(self):
         if not self.signal_manager.signals:
