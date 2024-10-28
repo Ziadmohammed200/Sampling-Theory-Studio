@@ -1,0 +1,69 @@
+# Set up the table
+        signal_info_table = QTableWidget()
+        signal_info_table.setColumnCount(3)  # Set the number of columns to 3
+        signal_info_table.setHorizontalHeaderLabels(["Name", "Frequency", "Amplitude"])
+        signal_info_table.setEditTriggers(QTableWidget.NoEditTriggers)  # Make the table read-only
+
+        # Configure header properties
+        header = signal_info_table.horizontalHeader()
+        header.setFont(QFont("Arial", 14, QFont.Bold))         # Set header font size
+        header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)  # Left-align header text
+        header.setStretchLastSection(False)                     # Ensure fixed width for all columns
+        # Set additional padding for header cells
+        header.setStyleSheet("""
+            QHeaderView::section {
+            padding-left: 5px;  /* Reduce left padding */
+            padding-right: 8px;
+            background-color: #f0f0f0;
+            font-size: 14px;
+            border: 1px solid #cccccc;
+            }
+        """)
+
+        # Adjust column header sizes
+        header.setMinimumHeight(40)                             # Increase the header height
+
+        # Set additional padding for header cells
+        header.setStyleSheet("""
+            QHeaderView::section {
+            padding: 8px;                    /* Adds space around header text */
+            background-color: #f0f0f0;       /* Light background color */
+            font-size: 14px;                 /* Font size */
+            border: 1px solid #cccccc;       /* Border for each header */
+            }
+        """)
+
+        # Set fixed width for each column
+        column_widths = [150, 200, 150]  # Define widths for each column (adjust as needed)
+        for i, width in enumerate(column_widths):
+            signal_info_table.setColumnWidth(i, width)
+
+        # Adjust row height and disable text wrapping
+        signal_info_table.verticalHeader().setDefaultSectionSize(35)  # Set row height
+        signal_info_table.setWordWrap(False)  # Ensure text doesn't wrap in cells
+
+        # Set initial table data
+        signal_info_table.insertRow(0)
+        signal_info_table.setItem(0, 0, QTableWidgetItem("Signal 1"))
+        signal_info_table.setItem(0, 1, QTableWidgetItem("2 Hz"))
+        signal_info_table.setItem(0, 2, QTableWidgetItem("3"))
+
+        signal_info_table.insertRow(1)
+        signal_info_table.setItem(1, 0, QTableWidgetItem("Signal 2"))
+        signal_info_table.setItem(1, 1, QTableWidgetItem("5 Hz"))
+        signal_info_table.setItem(1, 2, QTableWidgetItem("10"))
+
+        # Align cell contents with headers
+        for row in range(signal_info_table.rowCount()):
+            for col in range(signal_info_table.columnCount()):
+                signal_info_table.item(row, col).setTextAlignment(Qt.AlignCenter)
+
+        # Create a label for the table title
+        table_title = QLabel("Signal Info")
+        table_title.setAlignment(Qt.AlignCenter)
+        table_title.setFont(QFont("Arial", 16, QFont.Bold))
+        table_title.setStyleSheet("padding: 10px;")
+
+        # Add the title and table to the toolbar layout
+        toolbar_layout.addWidget(table_title)
+        toolbar_layout.addWidget(signal_info_table)
