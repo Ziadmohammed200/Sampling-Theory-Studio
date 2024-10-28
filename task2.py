@@ -1,4 +1,3 @@
-import GUI
 import os
 import numpy as np
 import pandas as pd
@@ -157,18 +156,22 @@ class GUI(QWidget):
         self.window = pg.GraphicsLayoutWidget(show=True, title="Signal Studio")
         self.window.resize(1200, 900)
         self.window.setMinimumSize(500, 500)
-        self.window.setBackground('k')  # Set background color for the entire window
+        self.window.setBackground('#d3d3d3')  # Set background color for the entire window
 
         # Create plots
-        self.signal_viewer = self.window.addPlot(title="Signal Viewer")
-        self.signal_viewer.setLabel('left', 'Amplitude')
-        self.signal_viewer.setLabel('bottom', 'Time (s)')
+        self.signal_viewer = self.window.addPlot(title="<span style='color: black;'>Signal Viewer</span>")
+        self.signal_viewer.setLabel('left', 'Amplitude', color='k')  # Set label color to black
+        self.signal_viewer.setLabel('bottom', 'Time (s)', color='k')  # Set label color to black
+        self.signal_viewer.getAxis('left').setPen('k')  # Set axis line color to black
+        self.signal_viewer.getAxis('bottom').setPen('k')  # Set axis line color to black
         self.signal_viewer.setAspectLocked(False)
         self.signal_viewer.showGrid(x=True, y=True, alpha=0.4)
 
-        self.reconstruction_viewer = self.window.addPlot(title="Reconstruction Viewer")
-        self.reconstruction_viewer.setLabel('left', 'Amplitude')
-        self.reconstruction_viewer.setLabel('bottom', 'Time (s)')
+        self.reconstruction_viewer = self.window.addPlot(title="<span style='color: black;'>Reconstruction Viewer</span>")
+        self.reconstruction_viewer.setLabel('left', 'Amplitude', color='k')
+        self.reconstruction_viewer.setLabel('bottom', 'Time (s)', color='k')
+        self.reconstruction_viewer.getAxis('left').setPen('k')
+        self.reconstruction_viewer.getAxis('bottom').setPen('k')
         self.reconstruction_viewer.setAspectLocked(False)
         self.reconstruction_viewer.showGrid(x=True, y=True, alpha=0.4)
         self.reconstruction_viewer.addLegend()
@@ -176,15 +179,19 @@ class GUI(QWidget):
         # Move to the next row
         self.window.nextRow()
 
-        self.difference_viewer = self.window.addPlot(title="Difference Viewer")
-        self.difference_viewer.setLabel('left', 'Amplitude')
-        self.difference_viewer.setLabel('bottom', 'Time (s)')
+        self.difference_viewer = self.window.addPlot(title="<span style='color: black;'>Difference Viewer</span>")
+        self.difference_viewer.setLabel('left', 'Amplitude', color='k')
+        self.difference_viewer.setLabel('bottom', 'Time (s)', color='k')
+        self.difference_viewer.getAxis('left').setPen('k')
+        self.difference_viewer.getAxis('bottom').setPen('k')
         self.difference_viewer.setAspectLocked(False)
         self.difference_viewer.showGrid(x=True, y=True, alpha=0.4)
 
-        self.freq_viewer = self.window.addPlot(title="Frequency Viewer")
-        self.freq_viewer.setLabel('left', 'Magnitude')
-        self.freq_viewer.setLabel('bottom', 'Frequency (Hz)')
+        self.freq_viewer = self.window.addPlot(title="<span style='color: black;'>Frequency Viewer</span>")
+        self.freq_viewer.setLabel('left', 'Magnitude', color='k')
+        self.freq_viewer.setLabel('bottom', 'Frequency (Hz)', color='k')
+        self.freq_viewer.getAxis('left').setPen('k')
+        self.freq_viewer.getAxis('bottom').setPen('k')
         self.freq_viewer.setAspectLocked(False)
         self.freq_viewer.showGrid(x=True, y=True, alpha=0.4)
 
@@ -275,8 +282,8 @@ class GUI(QWidget):
             slider.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             slider.setStyleSheet("""
                 QSlider::groove:horizontal { height: 8px; background: #f0f0f0; }
-                QSlider::handle:horizontal { width: 8px; background: #2196F3; }
-                QSlider::sub-page:horizontal { background: black; }
+                QSlider::handle:horizontal { width: 8px; background: black; }
+                QSlider::sub-page:horizontal { background: #2196F3; }
             """)
 
             value_label = QLabel(f"{default_value}")
@@ -294,8 +301,9 @@ class GUI(QWidget):
         self.frequency_slider, frequency_slider_layout = create_slider("Sampling Frequency", 2)
         controls_layout.addLayout(frequency_slider_layout)
         self.frequency_slider.valueChanged.connect(self.update_stem_plot)
+        self.frequency_slider.setRange(2,40)
 
-        self.SNR_slider, SNR_slider_layout = create_slider("SNR", 40)
+        self.SNR_slider, SNR_slider_layout = create_slider("SNR", 100)
         controls_layout.addLayout(SNR_slider_layout)
         self.SNR_slider.valueChanged.connect(lambda: self.update_plot_with_noise())
 
@@ -478,7 +486,8 @@ class GUI(QWidget):
     def plot(self, time, amplitude):
         # Plot the original signal if not already plotted
         if not hasattr(self, 'original_plot') or self.original_plot is None:
-            self.original_plot = self.signal_viewer.plot(time, amplitude, pen='b')
+            self.original_plot = self.signal_viewer.plot(time, amplitude,
+                                                         pen=pg.mkPen('#2196F3', width=3))  # Set line color and width
         else:
             self.original_plot.setData(time, amplitude)  # Update data if plot already exists
 
@@ -494,13 +503,14 @@ class GUI(QWidget):
         # Plot vertical lines and sample dots for the sampled signal
         for x, y in zip(time, amplitude):
             # Plot and store each vertical line
-            line = self.signal_viewer.plot([x, x], [0, y], pen=pg.mkPen('w'))
+            line = self.signal_viewer.plot([x, x], [0, y], pen=pg.mkPen('r'))
             self.sampled_items.append(line)
 
-        # Plot and store dots as a single item
-        dots = self.signal_viewer.plot(time, amplitude, pen=None, symbol='o', symbolBrush='w')
+        # Plot and store dots as a single item with reduced size
+        dots = self.signal_viewer.plot(time, amplitude, pen=None, symbol='o', symbolBrush='r',
+                                       symbolSize=7)  # Adjust size as needed
         self.sampled_items.append(dots)
-    # handling Error in slider change without signal upload
+
     def update_stem_plot(self):
         self.sampling_frequency = self.frequency_slider.value()
         try:
