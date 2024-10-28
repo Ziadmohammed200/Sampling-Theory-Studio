@@ -412,7 +412,7 @@ class GUI(QWidget):
 
     def check_data_validity(self, samples, sampled_amplitude):
         try:
-            # تحقق من أن البيانات في الشكل الصحيح والحجم المناسب
+
             samples = np.array(samples)
             sampled_amplitude = np.array(sampled_amplitude)
             print(f"Checking Data - Samples: {samples}, Sampled Amplitude: {sampled_amplitude}")
@@ -435,15 +435,15 @@ class GUI(QWidget):
     def update_reconstruction(self):
         print("Updating reconstruction...")
 
-        # تحويل البيانات إلى numpy arrays لضمان التوافق مع الدوال الحسابية
+
         self.samples = np.array(self.samples)
         self.sampled_amplitude = np.array(self.sampled_amplitude)
 
         print(f"Before Reconstruction - Samples: {self.samples}, Sampled Amplitude: {self.sampled_amplitude}")
 
-        # التحقق من صحة البيانات قبل إعادة التشكيل
+
         if self.check_data_validity(self.samples, self.sampled_amplitude):
-            # إعادة التشكيل بناءً على الطريقة المختارة
+
             self.reconstruct(self.samples, self.sampled_amplitude)
         else:
             print("Data is not valid for reconstruction.")
