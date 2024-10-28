@@ -191,7 +191,7 @@ class GUI(QWidget):
         # Create a vertical layout for the toolbar
         # Initialize the main layout for the toolbar
         toolbar_layout = QVBoxLayout()
-        toolbar_layout.setContentsMargins(50, 50, 50, 50)
+        toolbar_layout.setContentsMargins(5, 5, 5, 5)
 
         # First Section: Upload Button in a grey square
         upload_box = QGroupBox()
@@ -250,7 +250,7 @@ class GUI(QWidget):
         table_box.setMinimumHeight(340)  # Reduced overall height
         toolbar_layout.addWidget(table_box)
 
-        toolbar_layout.addSpacing(30)
+        toolbar_layout.addSpacing(5)
 
         # Third Section: Control Unit with Sliders, Dropdowns, and Additional Controls
         controls_box = QGroupBox("Control Unit")
@@ -339,6 +339,7 @@ class GUI(QWidget):
         frequency_label.setFixedWidth(120)
         frequency_label.setStyleSheet("font-size: 14px; color: #333333; padding-right: 10px;")
         self.freq_input = QLineEdit("1")
+        self.freq_input.setFixedHeight(30)
         self.freq_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.freq_input.setStyleSheet("padding: 5px;")
 
@@ -346,6 +347,7 @@ class GUI(QWidget):
         amplitude_label.setFixedWidth(120)
         amplitude_label.setStyleSheet("font-size: 14px; color: #333333; padding-right: 10px;")
         self.amplitude_input = QLineEdit("1")
+        self.amplitude_input.setFixedHeight(30)
         self.amplitude_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.amplitude_input.setStyleSheet("padding: 5px;")
 
