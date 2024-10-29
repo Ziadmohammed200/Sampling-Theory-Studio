@@ -304,7 +304,7 @@ class GUI(QWidget):
         self.frequency_slider, frequency_slider_layout = create_slider("Sampling Frequency", 2)
         controls_layout.addLayout(frequency_slider_layout)
         self.frequency_slider.valueChanged.connect(self.update_stem_plot)
-        self.frequency_slider.setRange(2,40)
+        self.frequency_slider.setRange(2,100)
 
         self.SNR_slider, SNR_slider_layout = create_slider("SNR", 100)
         controls_layout.addLayout(SNR_slider_layout)
@@ -546,10 +546,10 @@ class GUI(QWidget):
         self.sampled_items = []
 
         # Plot vertical lines and sample dots for the sampled signal
-        for x, y in zip(time, amplitude):
-            # Plot and store each vertical line
-            line = self.signal_viewer.plot([x, x], [0, y], pen=pg.mkPen('r'))
-            self.sampled_items.append(line)
+        # for x, y in zip(time, amplitude):
+        #     # Plot and store each vertical line
+        #     line = self.signal_viewer.plot([x, x], [0, y], pen=pg.mkPen('r'))
+        #     self.sampled_items.append(line)
 
         # Plot and store dots as a single item with reduced size
         dots = self.signal_viewer.plot(time, amplitude, pen=None, symbol='o', symbolBrush='r',
