@@ -87,7 +87,7 @@ class SignalManager:
                 length = 1000
                 time = np.linspace(0, length / 1000, length)  # Default time array with sampling rate 1000 Hz
 
-            amplitude = amplitude_value * np.sin(2 * np.pi * frequency * time)
+            amplitude = amplitude_value * np.cos(2 * np.pi * frequency * time)
             signal_name= f"freq{str(frequency)} amp{str(amplitude_value)}"
 
             signal = Signal(name=signal_name,amplitude=amplitude, time=time, signal_id=signal_id, signal_type='sinusoidal', frequency=frequency)
@@ -680,9 +680,13 @@ class GUI(QWidget):
         self.freq_viewer.plot(freq, magnitude, pen='b')
         self.freq_viewer.showGrid(x=True, y=True)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:  # If 'Esc' key is pressed
+            self.close()  # Close the application
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     main_window = GUI()
-    main_window.show()
+    main_window.showFullScreen()
     sys.exit(app.exec_())
