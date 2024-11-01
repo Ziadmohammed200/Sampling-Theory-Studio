@@ -5,7 +5,7 @@ import pyqtgraph as pg
 import scipy
 from PyQt5.QtWidgets import QApplication, QHBoxLayout, QWidget, QPushButton, QVBoxLayout, QSlider, QComboBox, QLabel, \
     QFormLayout, QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog, QMessageBox, QLineEdit, QGroupBox, \
-    QSizePolicy
+    QSizePolicy, QScrollArea
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QFont
 import sys
@@ -398,16 +398,22 @@ class GUI(QWidget):
 
         controls_box.setLayout(controls_layout)
         toolbar_layout.addWidget(controls_box)
+        # Create a scroll area for toolbar to handle overflow
+        toolbar_scroll_area = QScrollArea()
+        toolbar_scroll_area.setWidgetResizable(True)
+        toolbar_scroll_area.setMinimumWidth(300)
+        toolbar_scroll_area.setMaximumWidth(400)
 
         # Container widget for layout
         toolbar_widget = QWidget()
         toolbar_widget.setLayout(toolbar_layout)
         toolbar_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         toolbar_widget.setStyleSheet("background-color: #f0f0f0; padding: 10px;")
+        # Set the toolbar widget in the scroll area
+        toolbar_scroll_area.setWidget(toolbar_widget)
 
-        horizontal_layout.addWidget(toolbar_widget)
+        horizontal_layout.addWidget(toolbar_scroll_area, stretch=1)
         self.setLayout(horizontal_layout)
-
 
 
     def check_data_validity(self, samples, sampled_amplitude):
@@ -850,20 +856,23 @@ class GUI(QWidget):
         self.difference_viewer.plot(self.time, self.amplitude, pen='b')
 
     def plot_frequency(self, reconstructed_amplitude, reconstructed_time):
-        N = len(reconstructed_amplitude)  # Number of samples
-        fourier_transform = np.fft.fft(reconstructed_amplitude)
-        # Take only the positive half
-        fourier_transform = fourier_transform[:]
+        # Step 1: Compute Fourier transform of the reconstructed signal
+        N = len(reconstructed_amplitude)
+        fourier_transform = np.fft.fft(reconstructed_amplitude, n=N)
         freq = np.fft.fftfreq(N, d=(reconstructed_time[1] - reconstructed_time[0]))[:N // 2]
-        magnitude = np.abs(fourier_transform[:N // 2])
-        # Extract the real part of the Fourier transform for positive frequencies
-        # real_part = np.real(fourier_transform)
+        fourier_transform_magnitude = np.abs(fourier_transform[:N // 2])
 
-        # Clear previous frequency plot
+        # Step 2: Compute Fourier transform of the sampling function with zero-padding
+        frequency_response = np.fft.fft(self.samples, n=N)  # Zero-pad to match length N
+        frequency_response_magnitude = np.abs(frequency_response[:N // 2])
+
+        # Step 3: Perform convolution in the frequency domain
+        convolution_in_frequency_domain = fourier_transform_magnitude * frequency_response_magnitude
+
+        # Step 4: Plot the convolution result
         self.freq_viewer.clear()
-
-        # Plot frequency domain data using real part
-        self.freq_viewer.plot(freq, magnitude, pen='b')
+        self.freq_viewer.plot(freq, convolution_in_frequency_domain, pen='b')
+        self.freq_viewer.plot(freq, fourier_transform_magnitude, pen='r')
         self.freq_viewer.showGrid(x=True, y=True)
 
     def keyPressEvent(self, event):
@@ -874,5 +883,5 @@ class GUI(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     main_window = GUI()
-    main_window.showFullScreen()
+    main_window.show()
     sys.exit(app.exec_())
