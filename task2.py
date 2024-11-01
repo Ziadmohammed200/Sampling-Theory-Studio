@@ -314,7 +314,7 @@ class GUI(QWidget):
         dropdown_layout.setHorizontalSpacing(10)
 
         self.type_dropdown = QComboBox()
-        self.type_dropdown.addItems(["Linear", "Quadratic", "Sinusoid"])  # Add options to the combobox
+        self.type_dropdown.addItems(["Linear", "Quadratic", "Sinc", "Zero Order Hold", "Nearest Neighbor", "lanczos", "cubic"])  # Add options to the combobox
         self.type_dropdown.setStyleSheet("padding: 5px; height: 30px;")
         self.type_dropdown.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.type_dropdown.currentIndexChanged.connect(self.update_reconstruction)
@@ -583,81 +583,267 @@ class GUI(QWidget):
         self.plot(self.time, self.amplitude)
 
     def linear_interpolation(self, x_known, y_known, num_points=500):
-        print(f"Linear Interpolation called with x_known: {x_known}")
-        print(f"Linear Interpolation called with y_known: {y_known}")
+        """
+        Perform linear interpolation
 
-        if len(x_known) < 2 or len(y_known) < 2:
-            print("Error: Not enough data points for interpolation.")
-            return None, None
+        Args:
+            x_known (array-like): Known x values
+            y_known (array-like): Known y values
+            num_points (int): Number of interpolation points
 
+        Returns:
+            tuple: Interpolated x and y values
+        """
         try:
-            x_known = np.array(x_known)
-            y_known = np.array(y_known)
+            # Convert to numpy arrays for robust handling
+            x_known = np.asarray(x_known)
+            y_known = np.asarray(y_known)
 
-            x_interp = np.linspace(np.min(x_known), np.max(x_known), num_points)
-            print(f"x_interp (size: {len(x_interp)}): {x_interp}")
+            # Validate input
+            if len(x_known) < 2 or len(y_known) < 2:
+                print("Error: Not enough data points for interpolation.")
+                return None, None
 
-            linear_interp = interp1d(x_known, y_known, kind='linear')
-            print(f"linear_interp object created")
+            # Create interpolation points
+            x_interp = np.linspace(x_known.min(), x_known.max(), num_points)
 
+            # Perform interpolation
+            linear_interp = interp1d(x_known, y_known, kind='linear', fill_value='extrapolate')
             y_interp = linear_interp(x_interp)
-            print(f"y_interp (size: {len(y_interp)}): {y_interp}")
 
-            print("Linear interpolation completed successfully.")
             return x_interp, y_interp
-        except ValueError as e:
-            print(f"ValueError during linear interpolation: {e}")
-            return None, None
+
         except Exception as e:
-            print(f"Unexpected error during linear interpolation: {e}")
+            print(f"Linear interpolation error: {e}")
             return None, None
 
     def quadratic_interpolation(self, x_known, y_known, num_points=500):
-        print(f"Quadratic Interpolation called with x_known: {x_known}")
-        print(f"Quadratic Interpolation called with y_known: {y_known}")
+        """
+        Perform quadratic interpolation
 
-        if len(x_known) < 2 or len(y_known) < 2:
-            print("Error: Not enough data points for interpolation.")
+        Args:
+            x_known (array-like): Known x values
+            y_known (array-like): Known y values
+            num_points (int): Number of interpolation points
+
+        Returns:
+            tuple: Interpolated x and y values
+        """
+        try:
+            # Convert to numpy arrays for robust handling
+            x_known = np.asarray(x_known)
+            y_known = np.asarray(y_known)
+
+            # Validate input
+            if len(x_known) < 3 or len(y_known) < 3:
+                print("Error: Not enough data points for quadratic interpolation.")
+                return None, None
+
+            # Create interpolation points
+            x_interp = np.linspace(x_known.min(), x_known.max(), num_points)
+
+            # Perform interpolation
+            quadratic_interp = interp1d(x_known, y_known, kind='quadratic', fill_value='extrapolate')
+            y_interp = quadratic_interp(x_interp)
+
+            return x_interp, y_interp
+
+        except Exception as e:
+            print(f"Quadratic interpolation error: {e}")
             return None, None
 
+    def zero_order_hold(self, x_known, y_known, num_points=500):
+        """
+        Perform zero-order hold reconstruction
+
+        Args:
+            x_known (array-like): Known x values
+            y_known (array-like): Known y values
+            num_points (int): Number of interpolation points
+
+        Returns:
+            tuple: Reconstructed x and y values
+        """
         try:
-            x_interp = np.linspace(min(x_known), max(x_known), num_points)
-            quadratic_interp = interp1d(x_known, y_known, kind='quadratic')
-            y_interp = quadratic_interp(x_interp)
-            print("Quadratic interpolation completed successfully.")
+            # Convert to numpy arrays for robust handling
+            x_known = np.asarray(x_known)
+            y_known = np.asarray(y_known)
+
+            # Validate input
+            if len(x_known) < 2 or len(y_known) < 2:
+                print("Error: Not enough data points for zero-order hold.")
+                return None, None
+
+            # Create fine-grained time array
+            x_interp = np.linspace(x_known.min(), x_known.max(), num_points)
+
+            # Perform zero-order hold interpolation
+            y_interp = np.zeros_like(x_interp)
+            for i in range(len(x_known) - 1):
+                mask = (x_interp >= x_known[i]) & (x_interp < x_known[i + 1])
+                y_interp[mask] = y_known[i]
+
+            # Handle the last segment
+            y_interp[x_interp >= x_known[-1]] = y_known[-1]
+
             return x_interp, y_interp
+
         except Exception as e:
-            print(f"Error during quadratic interpolation: {e}")
+            print(f"Zero-order hold error: {e}")
+            return None, None
+
+    def nearest_neighbor_interpolation(self, x_known, y_known, num_points=500):
+        """
+        Perform nearest neighbor interpolation
+
+        Args:
+            x_known (array-like): Known x values
+            y_known (array-like): Known y values
+            num_points (int): Number of interpolation points
+
+        Returns:
+            tuple: Reconstructed x and y values
+        """
+        try:
+            # Convert to numpy arrays for robust handling
+            x_known = np.asarray(x_known)
+            y_known = np.asarray(y_known)
+
+            # Validate input
+            if len(x_known) < 2 or len(y_known) < 2:
+                print("Error: Not enough data points for nearest neighbor interpolation.")
+                return None, None
+
+            # Create interpolation points
+            x_interp = np.linspace(x_known.min(), x_known.max(), num_points)
+
+            # Perform nearest neighbor interpolation
+            nearest_interp = interp1d(x_known, y_known, kind='nearest', fill_value='extrapolate')
+            y_interp = nearest_interp(x_interp)
+
+            return x_interp, y_interp
+
+        except Exception as e:
+            print(f"Nearest neighbor interpolation error: {e}")
+            return None, None
+
+    def lanczos_interpolation(self, x_known, y_known, num_points=500, a=3):
+        """
+        Lanczos Interpolation
+
+        Args:
+            x_known (array): Original sample points
+            y_known (array): Original sample values
+            num_points (int): Number of interpolation points
+            a (int): Lanczos interpolation window size
+
+        Returns:
+            tuple: Interpolated time and amplitude arrays
+        """
+        try:
+            x_known = np.asarray(x_known)
+            y_known = np.asarray(y_known)
+
+            # Create interpolation points
+            x_interp = np.linspace(x_known.min(), x_known.max(), num_points)
+
+            # Lanczos interpolation
+            y_interp = scipy.ndimage.map_coordinates(
+                y_known,
+                [np.interp(x_interp, x_known, np.arange(len(x_known)))],
+                order=a,
+                mode='nearest'
+            )[0]
+
+            return x_interp, y_interp
+
+        except Exception as e:
+            print(f"Lanczos interpolation error: {e}")
+            return None, None
+
+    def cubic_interpolation(self, x_known, y_known, num_points=500):
+        """
+        Perform cubic spline interpolation
+
+        Args:
+            x_known (array-like): Known x (time) values
+            y_known (array-like): Known y (amplitude) values
+            num_points (int): Number of interpolation points
+
+        Returns:
+            tuple: Interpolated time and amplitude arrays
+        """
+        try:
+            # Convert inputs to numpy arrays
+            x_known = np.asarray(x_known)
+            y_known = np.asarray(y_known)
+
+            # Validate input
+            if len(x_known) < 4 or len(y_known) < 4:
+                print("Error: Cubic interpolation requires at least 4 data points.")
+                return None, None
+
+            # Create interpolation points
+            x_interp = np.linspace(x_known.min(), x_known.max(), num_points)
+
+            # Perform cubic spline interpolation
+            cubic_spline = scipy.interpolate.CubicSpline(x_known, y_known)
+            y_interp = cubic_spline(x_interp)
+
+            return x_interp, y_interp
+
+        except Exception as e:
+            print(f"Cubic interpolation error: {e}")
             return None, None
 
     def reconstruct(self, samples, sampled_amplitude):
-        print("Reconstructing signal...")
+        """
+        Reconstruct the signal using selected interpolation method
 
-
+        Args:
+            samples (array-like): Time samples
+            sampled_amplitude (array-like): Amplitude samples
+        """
+        # Clear previous plots
         self.reconstruction_viewer.clear()
 
-
+        # Get selected reconstruction method
         method = self.type_dropdown.currentText()
 
-        if method == "Linear":
+        # Perform reconstruction based on selected method
+        try:
+            if method == "Linear":
+                reconstructed_time, reconstructed_amplitude = self.linear_interpolation(samples, sampled_amplitude)
+            elif method == "Quadratic":
+                reconstructed_time, reconstructed_amplitude = self.quadratic_interpolation(samples, sampled_amplitude)
+            elif method == "Zero Order Hold":
+                reconstructed_time, reconstructed_amplitude = self.zero_order_hold(samples, sampled_amplitude)
+            elif method == "Nearest Neighbor":
+                reconstructed_time, reconstructed_amplitude = self.nearest_neighbor_interpolation(samples,
+                                                                                                  sampled_amplitude)
+            elif method == "Lanczos":
+                reconstructed_time, reconstructed_amplitude = self.lanczos_interpolation(samples, sampled_amplitude)
+            elif method == "cubic":
+                reconstructed_time, reconstructed_amplitude = self.cubic_interpolation(samples, sampled_amplitude)
 
-            reconstructed_time, reconstructed_amplitude = self.linear_interpolation(samples, sampled_amplitude)
-        elif method == "Quadratic":
+            else:
+                # Fallback to scipy resample if no specific method selected
+                reconstructed_amplitude, reconstructed_time = scipy.signal.resample(sampled_amplitude, 5000, samples)
 
-            reconstructed_time, reconstructed_amplitude = self.quadratic_interpolation(samples, sampled_amplitude)
-        else:
+            # Plot reconstructed signal
+            if reconstructed_time is not None and reconstructed_amplitude is not None:
+                self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
+                print("Reconstruction complete.")
 
-            reconstructed_amplitude, reconstructed_time = scipy.signal.resample(sampled_amplitude, 5000, samples)
+                # Additional processing
+                self.plot_frequency(reconstructed_amplitude, reconstructed_time)
+                self.get_difference_plot()
+                self.difference_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='r')
+            else:
+                print("Reconstruction failed due to invalid data.")
 
-        if reconstructed_time is not None and reconstructed_amplitude is not None:
-
-            self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
-            print("Reconstruction complete.")
-        else:
-            print("Reconstruction failed due to invalid data.")
-        self.plot_frequency(reconstructed_amplitude, reconstructed_time)
-        self.get_difference_plot()
-        self.difference_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='r')
+        except Exception as e:
+            print(f"Reconstruction error: {e}")
 
     def get_difference_plot(self):
         self.difference_viewer.clear()
