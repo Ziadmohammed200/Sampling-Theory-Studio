@@ -73,10 +73,11 @@ class SignalManager:
                 except Exception as e:
                     QMessageBox.critical(parent, "Error", f"Failed to load signal '{file_path}':\n{e}")
 
-    def add_signal_component(self, frequency, amplitude_value, parent):
+    def add_signal_component(self, frequency, amplitude_value,phase, parent):
         try:
             frequency = float(frequency)
             amplitude_value = float(amplitude_value)
+            phase = float(phase)
 
             signal_id = self.next_signal_id
 
@@ -84,10 +85,10 @@ class SignalManager:
                 length = len(self.signals[0].time)
                 time = self.signals[0].time
             else:
-                length = 1000
-                time = np.linspace(0, length / 1000, length)  # Default time array with sampling rate 1000 Hz
+                length = 1500
+                time = np.linspace(0, 6, length)  # Default time array with sampling rate 1000 Hz
 
-            amplitude = amplitude_value * np.cos(2 * np.pi * frequency * time)
+            amplitude = amplitude_value * np.cos(2 * np.pi * frequency * time + phase)
             signal_name= f"freq{str(frequency)} amp{str(amplitude_value)}"
 
             signal = Signal(name=signal_name,amplitude=amplitude, time=time, signal_id=signal_id, signal_type='sinusoidal', frequency=frequency)
@@ -365,17 +366,26 @@ class GUI(QWidget):
         self.amplitude_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.amplitude_input.setStyleSheet("padding: 5px;")
 
+        phase_label = QLabel("Phase:")
+        phase_label.setFixedWidth(120)
+        phase_label.setStyleSheet("font-size: 14px; color: #333333; padding-right: 10px;")
+        self.phase_input = QLineEdit("1")
+        self.phase_input.setFixedHeight(30)
+        self.phase_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.phase_input.setStyleSheet("padding: 5px;")
+
         # Add Signal Button
         add_signal_button = QPushButton("Add Signal")
         add_signal_button.setStyleSheet(
             "font-size: 14px; padding: 10px; background-color: #2196F3; color: white; border-radius: 5px;")
         add_signal_button.clicked.connect(
-            lambda: self.signal_manager.add_signal_component(self.freq_input.text(), self.amplitude_input.text(), self))
+            lambda: self.signal_manager.add_signal_component(self.freq_input.text(), self.amplitude_input.text(), self.phase_input.text(),self))
 
         input_form = QFormLayout()
         input_form.setHorizontalSpacing(5)
         input_form.addRow(frequency_label, self.freq_input)
         input_form.addRow(amplitude_label, self.amplitude_input)
+        input_form.addRow(phase_label, self.phase_input)
 
 
         # Add Widgets to Adding Signal Layout
@@ -414,6 +424,25 @@ class GUI(QWidget):
 
         horizontal_layout.addWidget(toolbar_scroll_area, stretch=1)
         self.setLayout(horizontal_layout)
+
+
+        self.generate_and_add_default_signal()
+
+
+    def generate_and_add_default_signal(self):
+        """Generate a default signal and add it to the table and signal manager."""
+
+        default_frequency = 2  # Example frequency in Hz
+        default_amplitude = 1.0  # Example amplitude
+        default_phase = 0.0
+
+
+
+
+        # Add signal to the SignalManager and plot it
+        self.signal_manager.add_signal_component( default_frequency, default_amplitude, default_phase,self)
+
+
 
 
     def check_data_validity(self, samples, sampled_amplitude):
@@ -494,6 +523,8 @@ class GUI(QWidget):
             self.reconstruction_viewer.clear()
             self.difference_viewer.clear()
             self.freq_viewer.clear()
+            self.original_plot = None
+            self.noisy_plot = None
 
     def plot_signals(self):
         if not self.signal_manager.signals:
@@ -588,7 +619,7 @@ class GUI(QWidget):
         self.sampled_amplitude = np.interp(self.samples, time, amplitude)
         self.plot(self.time, self.amplitude)
 
-    def linear_interpolation(self, x_known, y_known, num_points=500):
+    def linear_interpolation(self, x_known, y_known, num_points=1500):
         """
         Perform linear interpolation
 
@@ -623,7 +654,7 @@ class GUI(QWidget):
             print(f"Linear interpolation error: {e}")
             return None, None
 
-    def quadratic_interpolation(self, x_known, y_known, num_points=500):
+    def quadratic_interpolation(self, x_known, y_known, num_points=1500):
         """
         Perform quadratic interpolation
 
@@ -658,7 +689,7 @@ class GUI(QWidget):
             print(f"Quadratic interpolation error: {e}")
             return None, None
 
-    def zero_order_hold(self, x_known, y_known, num_points=500):
+    def zero_order_hold(self, x_known, y_known, num_points=1500):
         """
         Perform zero-order hold reconstruction
 
@@ -698,7 +729,7 @@ class GUI(QWidget):
             print(f"Zero-order hold error: {e}")
             return None, None
 
-    def nearest_neighbor_interpolation(self, x_known, y_known, num_points=500):
+    def nearest_neighbor_interpolation(self, x_known, y_known, num_points=1500):
         """
         Perform nearest neighbor interpolation
 
@@ -733,7 +764,7 @@ class GUI(QWidget):
             print(f"Nearest neighbor interpolation error: {e}")
             return None, None
 
-    def lanczos_interpolation(self, x_known, y_known, num_points=500, a=3):
+    def lanczos_interpolation(self, x_known, y_known, num_points=1500, a=3):
         """
         Lanczos Interpolation
 
@@ -767,7 +798,7 @@ class GUI(QWidget):
             print(f"Lanczos interpolation error: {e}")
             return None, None
 
-    def cubic_interpolation(self, x_known, y_known, num_points=500):
+    def cubic_interpolation(self, x_known, y_known, num_points=1500):
         """
         Perform cubic spline interpolation
 
@@ -834,7 +865,7 @@ class GUI(QWidget):
 
             else:
                 # Fallback to scipy resample if no specific method selected
-                reconstructed_amplitude, reconstructed_time = scipy.signal.resample(sampled_amplitude, 5000, samples)
+                reconstructed_amplitude, reconstructed_time = scipy.signal.resample(sampled_amplitude, 1500, samples)
 
             # Plot reconstructed signal
             if reconstructed_time is not None and reconstructed_amplitude is not None:
@@ -844,7 +875,11 @@ class GUI(QWidget):
                 # Additional processing
                 self.plot_frequency(reconstructed_amplitude, reconstructed_time)
                 self.get_difference_plot()
-                self.difference_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='r')
+                self.difference_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='r',name="Reconstructed Signal")
+                print(len(self.amplitude), len(reconstructed_amplitude))
+                difference_amplitude = np.array(self.amplitude) - np.array(reconstructed_amplitude)
+                self.difference_viewer.plot(self.time ,difference_amplitude, pen='g',name="Difference Signal ")
+
             else:
                 print("Reconstruction failed due to invalid data.")
 
@@ -853,7 +888,11 @@ class GUI(QWidget):
 
     def get_difference_plot(self):
         self.difference_viewer.clear()
-        self.difference_viewer.plot(self.time, self.amplitude, pen='b')
+        # Add legend if not already added
+        if not hasattr(self, '_legend_added'):
+            self.difference_viewer.addLegend()
+            self._legend_added = True
+        self.difference_viewer.plot(self.time, self.amplitude, pen='b',name='Original Signal')
 
     def plot_frequency(self, reconstructed_amplitude, reconstructed_time):
         # Step 1: Compute Fourier transform of the reconstructed signal
@@ -873,6 +912,7 @@ class GUI(QWidget):
         self.freq_viewer.clear()
         self.freq_viewer.plot(freq, convolution_in_frequency_domain, pen='b')
         self.freq_viewer.plot(freq, fourier_transform_magnitude, pen='r')
+        self.freq_viewer.setXRange(0, 8, padding=0)
         self.freq_viewer.showGrid(x=True, y=True)
 
     def keyPressEvent(self, event):
