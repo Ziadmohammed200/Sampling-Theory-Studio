@@ -117,6 +117,7 @@ class SignalManager:
 
         for signal in self.signals:
             combined_amplitude += signal.amplitude
+        original_signal = combined_amplitude
 
         # Signal power calculation
         signal_power = np.mean(combined_amplitude ** 2)
@@ -129,7 +130,7 @@ class SignalManager:
         noisy_signal = combined_amplitude + noise
 
 
-        return time, noisy_signal
+        return time, noisy_signal , original_signal
     def remove_signal(self, signal_id):
         """Remove a signal by its ID."""
         self.signals = [signal for signal in self.signals if signal.signal_id != signal_id]
@@ -155,47 +156,51 @@ class GUI(QWidget):
         self.amplitude = []
         self.sampled_amplitude = []
         self.sampling_frequency = 2
+        self.original_signal= []
 
         # Create the GraphicsLayoutWidget and set minimum size
         self.window = pg.GraphicsLayoutWidget(show=True, title="Signal Studio")
         self.window.resize(1200, 900)
         self.window.setMinimumSize(500, 500)
-        self.window.setBackground('#d3d3d3')  # Set background color for the entire window
+        self.window.setBackground('black')  # Set background color for the entire window
 
         # Create plots
-        self.signal_viewer = self.window.addPlot(title="<span style='color: black;'>Signal Viewer</span>")
-        self.signal_viewer.setLabel('left', 'Amplitude', color='k')  # Set label color to black
-        self.signal_viewer.setLabel('bottom', 'Time (s)', color='k')  # Set label color to black
-        self.signal_viewer.getAxis('left').setPen('k')  # Set axis line color to black
-        self.signal_viewer.getAxis('bottom').setPen('k')  # Set axis line color to black
+        self.signal_viewer = self.window.addPlot(title="<span style='color: white;'>Signal Viewer</span>")
+        self.signal_viewer.setLabel('left', 'Amplitude', color='white')  # Set label color to black
+        self.signal_viewer.setLabel('bottom', 'Time (s)', color='white')  # Set label color to black
+        self.signal_viewer.getAxis('left').setPen('white')  # Set axis line color to black
+        self.signal_viewer.getAxis('bottom').setPen('white')  # Set axis line color to black
         self.signal_viewer.setAspectLocked(False)
         self.signal_viewer.showGrid(x=True, y=True, alpha=0.4)
 
-        self.reconstruction_viewer = self.window.addPlot(title="<span style='color: black;'>Reconstruction Viewer</span>")
-        self.reconstruction_viewer.setLabel('left', 'Amplitude', color='k')
-        self.reconstruction_viewer.setLabel('bottom', 'Time (s)', color='k')
-        self.reconstruction_viewer.getAxis('left').setPen('k')
-        self.reconstruction_viewer.getAxis('bottom').setPen('k')
-        self.reconstruction_viewer.setAspectLocked(False)
-        self.reconstruction_viewer.showGrid(x=True, y=True, alpha=0.4)
-        self.reconstruction_viewer.addLegend()
+        self.difference_viewer = self.window.addPlot(title="<span style='color: white;'>Difference Viewer</span>")
+        self.difference_viewer.setLabel('left', 'Amplitude', color='white')
+        self.difference_viewer.setLabel('bottom', 'Time (s)', color='white')
+        self.difference_viewer.getAxis('left').setPen('white')
+        self.difference_viewer.getAxis('bottom').setPen('white')
+        self.difference_viewer.setAspectLocked(False)
+        self.difference_viewer.showGrid(x=True, y=True, alpha=0.4)
 
         # Move to the next row
         self.window.nextRow()
 
-        self.difference_viewer = self.window.addPlot(title="<span style='color: black;'>Difference Viewer</span>")
-        self.difference_viewer.setLabel('left', 'Amplitude', color='k')
-        self.difference_viewer.setLabel('bottom', 'Time (s)', color='k')
-        self.difference_viewer.getAxis('left').setPen('k')
-        self.difference_viewer.getAxis('bottom').setPen('k')
-        self.difference_viewer.setAspectLocked(False)
-        self.difference_viewer.showGrid(x=True, y=True, alpha=0.4)
+        self.reconstruction_viewer = self.window.addPlot(
+            title="<span style='color: white;'>Reconstruction Viewer</span>")
+        self.reconstruction_viewer.setLabel('left', 'Amplitude', color='k')
+        self.reconstruction_viewer.setLabel('bottom', 'Time (s)', color='k')
+        self.reconstruction_viewer.getAxis('left').setPen('white')
+        self.reconstruction_viewer.getAxis('bottom').setPen('white')
+        self.reconstruction_viewer.setAspectLocked(False)
+        self.reconstruction_viewer.showGrid(x=True, y=True, alpha=0.4)
+        self.reconstruction_viewer.addLegend()
 
-        self.freq_viewer = self.window.addPlot(title="<span style='color: black;'>Frequency Viewer</span>")
-        self.freq_viewer.setLabel('left', 'Magnitude', color='k')
-        self.freq_viewer.setLabel('bottom', 'Frequency (Hz)', color='k')
-        self.freq_viewer.getAxis('left').setPen('k')
-        self.freq_viewer.getAxis('bottom').setPen('k')
+
+
+        self.freq_viewer = self.window.addPlot(title="<span style='color: white;'>Frequency Viewer</span>")
+        self.freq_viewer.setLabel('left', 'Magnitude', color='white')
+        self.freq_viewer.setLabel('bottom', 'Frequency (Hz)', color='white')
+        self.freq_viewer.getAxis('left').setPen('white')
+        self.freq_viewer.getAxis('bottom').setPen('white')
         self.freq_viewer.setAspectLocked(False)
         self.freq_viewer.showGrid(x=True, y=True, alpha=0.4)
 
@@ -436,9 +441,6 @@ class GUI(QWidget):
         default_amplitude = 1.0  # Example amplitude
         default_phase = 0.0
 
-
-
-
         # Add signal to the SignalManager and plot it
         self.signal_manager.add_signal_component( default_frequency, default_amplitude, default_phase,self)
 
@@ -531,7 +533,7 @@ class GUI(QWidget):
             QMessageBox.warning(self, "No Signal", "No signals to plot.")
             return
 
-        time, noisy_signal = self.signal_manager.get_combined_signal_with_noise()
+        time, noisy_signal,self.original_signal = self.signal_manager.get_combined_signal_with_noise()
         if time is None or noisy_signal is None:
             return
 
@@ -546,17 +548,6 @@ class GUI(QWidget):
         self.signal_manager.set_snr(self.SNR_slider.value())
         self.plot_signals()
 
-    # def upload_signal(self):
-    #     options = QFileDialog.Options()
-    #     file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV File", "", "CSV Files (*.csv);;All Files (*)",
-    #                                                options=options)
-    #     if file_path:
-    #         try:
-    #             self.data = pd.read_csv(file_path)
-    #             self.start()
-    #         except Exception as e:
-    #             QMessageBox.critical(self, "Error", f"Failed to load CSV file:\n{e}")
-
     def start(self,amplitude,time):
         self.time = time
         self.amplitude = amplitude
@@ -569,7 +560,7 @@ class GUI(QWidget):
         # Plot the original signal if not already plotted
         if not hasattr(self, 'original_plot') or self.original_plot is None:
             self.original_plot = self.signal_viewer.plot(time, amplitude,
-                                                         pen=pg.mkPen('#2196F3', width=3))  # Set line color and width
+                                                         pen=pg.mkPen('b', width=3))  # Set line color and width
         else:
             self.original_plot.setData(time, amplitude)  # Update data if plot already exists
 
@@ -582,11 +573,6 @@ class GUI(QWidget):
         # Create a list to store the new sampled plot items (vertical lines and dots)
         self.sampled_items = []
 
-        # Plot vertical lines and sample dots for the sampled signal
-        # for x, y in zip(time, amplitude):
-        #     # Plot and store each vertical line
-        #     line = self.signal_viewer.plot([x, x], [0, y], pen=pg.mkPen('r'))
-        #     self.sampled_items.append(line)
 
         # Plot and store dots as a single item with reduced size
         dots = self.signal_viewer.plot(time, amplitude, pen=None, symbol='o', symbolBrush='r',
@@ -872,27 +858,21 @@ class GUI(QWidget):
                 self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
                 print("Reconstruction complete.")
 
-                # Additional processing
                 self.plot_frequency(reconstructed_amplitude, reconstructed_time)
-                self.get_difference_plot()
-                self.difference_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='r',name="Reconstructed Signal")
-                print(len(self.amplitude), len(reconstructed_amplitude))
-                difference_amplitude = np.array(self.amplitude) - np.array(reconstructed_amplitude)
-                self.difference_viewer.plot(self.time ,difference_amplitude, pen='g',name="Difference Signal ")
-
+                self.get_difference_plot(self.original_signal,reconstructed_amplitude)
             else:
                 print("Reconstruction failed due to invalid data.")
 
         except Exception as e:
             print(f"Reconstruction error: {e}")
 
-    def get_difference_plot(self):
+    def get_difference_plot(self,original_signal,reconstructed_signal):
         self.difference_viewer.clear()
-        # Add legend if not already added
-        if not hasattr(self, '_legend_added'):
-            self.difference_viewer.addLegend()
-            self._legend_added = True
-        self.difference_viewer.plot(self.time, self.amplitude, pen='b',name='Original Signal')
+        difference_amplitude = np.array(original_signal) - np.array(reconstructed_signal)
+        self.difference_viewer.plot(self.time, difference_amplitude, pen='r',name='Original Signal',width=3)
+        max_y = np.max(original_signal)
+        min_y = np.min(original_signal)
+        self.difference_viewer.setYRange(min_y, max_y)
 
     def plot_frequency(self, reconstructed_amplitude, reconstructed_time):
         # Step 1: Compute Fourier transform of the reconstructed signal
