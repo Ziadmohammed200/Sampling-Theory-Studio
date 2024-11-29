@@ -218,7 +218,7 @@ class GUI(QWidget):
         # First Section: Upload Button in a grey square
         upload_box = QGroupBox()
         upload_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-        upload_box.setStyleSheet("background-color: #d3d3d3; padding: 20px;")
+        upload_box.setStyleSheet("background-color: #FFFFFF; padding: 20px;")
         upload_layout = QVBoxLayout()
         upload_button = QPushButton("Upload")
         upload_button.setIcon(QIcon("path/to/icon.png"))
@@ -239,7 +239,7 @@ class GUI(QWidget):
         # Second Section: Signal Info Table
         table_box = QGroupBox("Signal Info")
         table_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # Allows both horizontal and vertical expansion
-        table_box.setStyleSheet("background-color: #d3d3d3; padding: 20px; font-size: 16px; font-weight: bold;")
+        table_box.setStyleSheet("background-color: #FFFFFF; padding: 20px; font-size: 16px; font-weight: bold;")
         table_layout = QVBoxLayout()
 
         self.signal_info_table = QTableWidget()
@@ -277,7 +277,7 @@ class GUI(QWidget):
         # Third Section: Control Unit with Sliders, Dropdowns, and Additional Controls
         controls_box = QGroupBox("Control Unit")
         controls_box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        controls_box.setStyleSheet("background-color: #d3d3d3; padding: 20px; font-size: 16px; font-weight: bold;")
+        controls_box.setStyleSheet("background-color: #FFFFFF; padding: 20px; font-size: 16px; font-weight: bold;")
         controls_layout = QVBoxLayout()
 
         # Slider creation function with adjusted spacing
