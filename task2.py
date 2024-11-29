@@ -144,7 +144,8 @@ class GUI(QWidget):
 
         # Set up the main window properties
         self.setWindowTitle('Signal-Studio')
-        self.resize(1400, 900)  # Set window size
+        self.resize(1600, 900)  # Set window size
+        self.setMinimumSize(1200, 700)  # Set minimum size to prevent extreme resizing
 
         # Initialize SignalManager with plot_signals as the callback
         self.signal_manager = SignalManager(self.plot_signals)
@@ -418,8 +419,8 @@ class GUI(QWidget):
         # Create a scroll area for toolbar to handle overflow
         toolbar_scroll_area = QScrollArea()
         toolbar_scroll_area.setWidgetResizable(True)
-        toolbar_scroll_area.setMinimumWidth(300)
-        toolbar_scroll_area.setMaximumWidth(400)
+        toolbar_scroll_area.setMinimumWidth(400)
+        toolbar_scroll_area.setMaximumWidth(500)
 
         # Container widget for layout
         toolbar_widget = QWidget()
