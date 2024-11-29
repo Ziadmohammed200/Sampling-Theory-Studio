@@ -563,6 +563,7 @@ class GUI(QWidget):
                                                          pen=pg.mkPen('b', width=3))  # Set line color and width
         else:
             self.original_plot.setData(time, amplitude)  # Update data if plot already exists
+        self.plot_frequency(self.original_signal,self.time)
 
     def stem_plot(self, time, amplitude):
         # Clear previous sampled plots, including vertical lines and dots
@@ -858,7 +859,7 @@ class GUI(QWidget):
                 self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
                 print("Reconstruction complete.")
 
-                self.plot_frequency(reconstructed_amplitude, reconstructed_time)
+
                 self.get_difference_plot(self.original_signal,reconstructed_amplitude)
             else:
                 print("Reconstruction failed due to invalid data.")
@@ -874,25 +875,31 @@ class GUI(QWidget):
         min_y = np.min(original_signal)
         self.difference_viewer.setYRange(min_y, max_y)
 
-    def plot_frequency(self, reconstructed_amplitude, reconstructed_time):
-        # Step 1: Compute Fourier transform of the reconstructed signal
-        N = len(reconstructed_amplitude)
-        fourier_transform = np.fft.fft(reconstructed_amplitude, n=N)
-        freq = np.fft.fftfreq(N, d=(reconstructed_time[1] - reconstructed_time[0]))[:N // 2]
-        fourier_transform_magnitude = np.abs(fourier_transform[:N // 2])
+    def plot_frequency(self, original_amplitude, original_time):
+        # Step 1: Compute Fourier transform of the original signal
+        N = len(original_amplitude)
+        fourier_transform = np.fft.fft(original_amplitude, n=N)
+        freq = np.fft.fftfreq(N, d=(original_time[1] - original_time[0]))
+        fourier_transform_magnitude = np.abs(fourier_transform)
 
-        # Step 2: Compute Fourier transform of the sampling function with zero-padding
-        frequency_response = np.fft.fft(self.samples, n=N)  # Zero-pad to match length N
-        frequency_response_magnitude = np.abs(frequency_response[:N // 2])
+        # Step 2: Periodically replicate the Fourier transform magnitude every fs
+        fs = self.sampling_frequency
+        max_freq = np.max(freq)
+        replicated_freq = []
+        replicated_magnitude = []
 
-        # Step 3: Perform convolution in the frequency domain
-        convolution_in_frequency_domain = fourier_transform_magnitude * frequency_response_magnitude
+        for k in range(int(max_freq // fs) + 1):  # Create copies for each interval of fs
+            offset = k * fs
+            replicated_freq.extend(freq + offset)
+            replicated_magnitude.extend(fourier_transform_magnitude)
 
-        # Step 4: Plot the convolution result
+        # Convert to numpy arrays for plotting
+        replicated_freq = np.array(replicated_freq)
+        replicated_magnitude = np.array(replicated_magnitude)
+
+        # Step 3: Clear previous plot and display the frequency domain
         self.freq_viewer.clear()
-        self.freq_viewer.plot(freq, convolution_in_frequency_domain, pen='b')
-        self.freq_viewer.plot(freq, fourier_transform_magnitude, pen='r')
-        self.freq_viewer.setXRange(0, 8, padding=0)
+        self.freq_viewer.plot(replicated_freq, replicated_magnitude, pen='b')  # Plot replicated data
         self.freq_viewer.showGrid(x=True, y=True)
 
     def keyPressEvent(self, event):
