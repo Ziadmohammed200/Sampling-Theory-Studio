@@ -86,7 +86,7 @@ class SignalManager:
                 time = self.signals[0].time
             else:
                 length = 1500
-                time = np.linspace(0, 6, length)  # Default time array with sampling rate 1000 Hz
+                time = np.linspace(0, 6, length)  # Default time array with sampling rate 1500 Hz
 
             amplitude = amplitude_value * np.cos(2 * np.pi * frequency * time + phase)
             signal_name= f"freq{str(frequency)} amp{str(amplitude_value)}"
@@ -99,6 +99,7 @@ class SignalManager:
 
             # Automatically plot after adding a new signal component
             self.plot_callback()
+
 
         except ValueError:
             QMessageBox.warning(parent, "Invalid Input", "Please enter valid numbers for frequency and amplitude.")
@@ -128,6 +129,7 @@ class SignalManager:
 
         # Combine signal with noise
         noisy_signal = combined_amplitude + noise
+
 
 
         return time, noisy_signal , original_signal
@@ -555,6 +557,7 @@ class GUI(QWidget):
         self.stem_plot(self.samples, self.sampled_amplitude)
         self.plot(self.time, self.amplitude)
         self.reconstruct(self.samples, self.sampled_amplitude)
+        self.plot_frequency(self.original_signal, self.time)
 
     def plot(self, time, amplitude):
         # Plot the original signal if not already plotted
@@ -593,6 +596,7 @@ class GUI(QWidget):
             msg_box.setWindowTitle("Upload Error !")
             msg_box.setStandardButtons(QMessageBox.Ok)
             msg_box.exec_()
+
 
     def calculate_max_frequency(self, amplitude):
         # Use FFT to find the maximum frequency component
@@ -876,30 +880,62 @@ class GUI(QWidget):
         self.difference_viewer.setYRange(min_y, max_y)
 
     def plot_frequency(self, original_amplitude, original_time):
+        import numpy as np
+
         # Step 1: Compute Fourier transform of the original signal
         N = len(original_amplitude)
         fourier_transform = np.fft.fft(original_amplitude, n=N)
         freq = np.fft.fftfreq(N, d=(original_time[1] - original_time[0]))
         fourier_transform_magnitude = np.abs(fourier_transform)
 
-        # Step 2: Periodically replicate the Fourier transform magnitude every fs
-        fs = self.sampling_frequency
-        max_freq = np.max(freq)
-        replicated_freq = []
-        replicated_magnitude = []
+        # Step 2: Normalize the magnitude
+        fourier_transform_magnitude /= np.max(fourier_transform_magnitude)
 
-        for k in range(int(max_freq // fs) + 1):  # Create copies for each interval of fs
-            offset = k * fs
-            replicated_freq.extend(freq + offset)
-            replicated_magnitude.extend(fourier_transform_magnitude)
+        # Step 3: Apply a threshold to filter out insignificant magnitudes
+        threshold = 0.1  # Define a threshold (e.g., 10% of max normalized magnitude)
+        significant_indices = np.where(fourier_transform_magnitude[:N // 2] > threshold)[0]
 
-        # Convert to numpy arrays for plotting
-        replicated_freq = np.array(replicated_freq)
-        replicated_magnitude = np.array(replicated_magnitude)
+        if significant_indices.size == 0:
+            print("No significant frequency components found.")
+            return
 
-        # Step 3: Clear previous plot and display the frequency domain
+        # Step 4: Find the highest frequency among significant components
+        max_index = significant_indices[-1]  # Get the index of the highest frequency component
+        max_frequency = freq[max_index]
+        max_magnitude = fourier_transform_magnitude[max_index]
+
+        # Step 5: Prepare for plotting
         self.freq_viewer.clear()
-        self.freq_viewer.plot(replicated_freq, replicated_magnitude, pen='b')  # Plot replicated data
+
+        # Plot the original rectangle for the fundamental frequency
+        self.freq_viewer.plot(
+            [-max_frequency, max_frequency],  # Horizontal line connecting -w and +w
+            [max_magnitude, max_magnitude],  # Constant magnitude
+            pen='r'
+        )
+
+        # Plot impulses at -w and +w for the original signal
+        self.freq_viewer.plot([-max_frequency, -max_frequency], [0, max_magnitude], pen='b')  # Vertical at -w
+        self.freq_viewer.plot([max_frequency, max_frequency], [0, max_magnitude], pen='b')  # Vertical at +w
+
+        # Step 6: Repeat the spectrum for fs and 2fs
+        for k in range(1, 3):  # Repeat for fs and 2fs
+            offset = k * self.sampling_frequency
+
+            # Draw rectangle for repetition
+            self.freq_viewer.plot(
+                [-max_frequency + offset, max_frequency + offset],  # Shifted horizontal line
+                [max_magnitude, max_magnitude],  # Constant magnitude
+                pen='r'
+            )
+
+            # Draw impulses for repetition
+            self.freq_viewer.plot([-max_frequency + offset, -max_frequency + offset], [0, max_magnitude],
+                                  pen='b')  # Vertical at -w + offset
+            self.freq_viewer.plot([max_frequency + offset, max_frequency + offset], [0, max_magnitude],
+                                  pen='b')  # Vertical at +w + offset
+
+        # Show the grid
         self.freq_viewer.showGrid(x=True, y=True)
 
     def keyPressEvent(self, event):
