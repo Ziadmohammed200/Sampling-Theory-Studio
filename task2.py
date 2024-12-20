@@ -77,7 +77,7 @@ class SignalManager:
         try:
             frequency = float(frequency)
             amplitude_value = float(amplitude_value)
-            phase = float(phase)
+            phase = (float(phase)*np.pi)/180
 
             signal_id = self.next_signal_id
 
@@ -213,7 +213,7 @@ class GUI(QWidget):
         # Create a vertical layout for the toolbar
         # Initialize the main layout for the toolbar
         toolbar_layout = QVBoxLayout()
-        toolbar_layout.setContentsMargins(5, 5, 5, 5)
+        toolbar_layout.setContentsMargins(2, 2, 2, 2)
 
         # First Section: Upload Button in a grey square
         upload_box = QGroupBox()
@@ -231,10 +231,11 @@ class GUI(QWidget):
         """)
         upload_layout.addWidget(upload_button)
         upload_box.setLayout(upload_layout)
+        upload_box.setContentsMargins(1,1,1,1)
         toolbar_layout.addWidget(upload_box)
         upload_button.clicked.connect(lambda: self.signal_manager.upload_signal(self))
 
-        toolbar_layout.addStretch(1)
+        #toolbar_layout.addStretch(1)
 
         # Second Section: Signal Info Table
         table_box = QGroupBox("Signal Info")
@@ -247,8 +248,8 @@ class GUI(QWidget):
         self.signal_info_table.setColumnCount(3)
         self.signal_info_table.setHorizontalHeaderLabels(["Name", "Frequency", "Amplitude"])
         self.signal_info_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.signal_info_table.setMinimumHeight(300)
-        self.signal_info_table.setMaximumHeight(400)
+        self.signal_info_table.setMinimumHeight(100)
+        self.signal_info_table.setMaximumHeight(150)
 
         header = self.signal_info_table.horizontalHeader()
         header.setFont(QFont("Arial", 14, QFont.Bold))
@@ -269,10 +270,10 @@ class GUI(QWidget):
         table_layout.addWidget(self.signal_info_table)
         table_layout.setSizeConstraint(250)
         table_box.setLayout(table_layout)
-        table_box.setMinimumHeight(340)  # Reduced overall height
+        table_box.setMinimumHeight(220)  # Reduced overall height
         toolbar_layout.addWidget(table_box)
 
-        toolbar_layout.addSpacing(5)
+        toolbar_layout.addSpacing(1)
 
         # Third Section: Control Unit with Sliders, Dropdowns, and Additional Controls
         controls_box = QGroupBox("Control Unit")
@@ -377,7 +378,7 @@ class GUI(QWidget):
         phase_label = QLabel("Phase:")
         phase_label.setFixedWidth(120)
         phase_label.setStyleSheet("font-size: 14px; color: #333333; padding-right: 10px;")
-        self.phase_input = QLineEdit("1")
+        self.phase_input = QLineEdit("0")
         self.phase_input.setFixedHeight(30)
         self.phase_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.phase_input.setStyleSheet("padding: 5px;")
@@ -389,6 +390,7 @@ class GUI(QWidget):
         add_signal_button.clicked.connect(
             lambda: self.signal_manager.add_signal_component(self.freq_input.text(), self.amplitude_input.text(), self.phase_input.text(),self))
 
+        # 2196F3
         input_form = QFormLayout()
         input_form.setHorizontalSpacing(5)
         input_form.addRow(frequency_label, self.freq_input)
@@ -530,6 +532,7 @@ class GUI(QWidget):
             self.freq_viewer.clear()
             self.original_plot = None
             self.noisy_plot = None
+            self.original_signal=None
 
     def plot_signals(self):
         if not self.signal_manager.signals:
@@ -568,6 +571,8 @@ class GUI(QWidget):
         else:
             self.original_plot.setData(time, amplitude)  # Update data if plot already exists
         self.plot_frequency(self.original_signal,self.time)
+
+
 
     def stem_plot(self, time, amplitude):
         # Clear previous sampled plots, including vertical lines and dots
@@ -610,6 +615,10 @@ class GUI(QWidget):
         self.samples = np.arange(time[0], time[len(time) - 1], (1 / sampling_frequency))
         self.sampled_amplitude = np.interp(self.samples, time, amplitude)
         self.plot(self.time, self.amplitude)
+
+    def recontruct_by_sinc(self,samples_amplitude,samples_time,original_time):
+        T = original_time[-1]-original_time[0]
+        return np.sum(samples_amplitude[:,None]* np.sinc((samples_time[None,:]-original_time[:,None])/T),axis=0)
 
     def linear_interpolation(self, x_known, y_known, num_points=1500):
         """
@@ -836,6 +845,7 @@ class GUI(QWidget):
         # Clear previous plots
         self.reconstruction_viewer.clear()
 
+
         # Get selected reconstruction method
         method = self.type_dropdown.currentText()
 
@@ -860,12 +870,16 @@ class GUI(QWidget):
                 reconstructed_amplitude, reconstructed_time = scipy.signal.resample(sampled_amplitude, 1500, samples)
 
             # Plot reconstructed signal
-            if reconstructed_time is not None and reconstructed_amplitude is not None:
-                self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
+            if reconstructed_time is not None and reconstructed_amplitude is not None and self.original_signal is not None:
+                print(self.original_signal)
+                self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen=pg.mkPen('b', width=3))
                 print("Reconstruction complete.")
-
-
                 self.get_difference_plot(self.original_signal,reconstructed_amplitude)
+
+            # if reconstructed_amplitude is not None:
+            #     self.reconstruction_viewer.plot(reconstructed_time, reconstructed_amplitude, pen='b')
+            #     print("Reconstruction complete.")
+
             else:
                 print("Reconstruction failed due to invalid data.")
 
@@ -875,7 +889,7 @@ class GUI(QWidget):
     def get_difference_plot(self,original_signal,reconstructed_signal):
         self.difference_viewer.clear()
         difference_amplitude = np.array(original_signal) - np.array(reconstructed_signal)
-        self.difference_viewer.plot(self.time, difference_amplitude, pen='r',name='Original Signal',width=3)
+        self.difference_viewer.plot(self.time, difference_amplitude, pen=pg.mkPen('r', width=3),name='Original Signal')
         max_y = np.max(original_signal)
         min_y = np.min(original_signal)
         self.difference_viewer.setYRange(min_y, max_y)
