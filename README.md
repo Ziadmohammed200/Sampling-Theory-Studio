@@ -56,6 +56,8 @@ Sampling an analog signal is a crucial step in any digital signal processing sys
   - **Scenario 3:** Sampling a signal with a critical frequency component.
 ![Aliasing](https://github.com/user-attachments/assets/83f78e51-b2cd-4031-84c4-cc2686836955)
 
+### 8. **Interactive Demo: Sampling Theory Studio App**
+https://github.com/user-attachments/assets/441c5a2d-2587-4ccc-899f-2400b3b24709
 
 ---
 
@@ -102,23 +104,15 @@ Sampling an analog signal is a crucial step in any digital signal processing sys
 1. **Load or Compose Signals**:
    - Use the "Load Signal" button to import a signal file.
    - Alternatively, create a mixed signal using the signal composer.
-   *(Insert image showing signal loading and composition)*
 
 2. **Add Noise**:
    - Adjust the SNR slider to add noise to the signal.
-   *(Insert image showing noise addition UI)*
 
 3. **Sample and Recover**:
    - Adjust the sampling frequency and observe the reconstruction in real time.
-   *(Insert video demonstrating real-time sampling and recovery)*
 
 4. **Test Different Reconstruction Methods**:
    - Select a reconstruction method from the combobox and compare results.
-   *(Insert image showing method selection and comparison)*
-
-5. **Export Results**:
-   - Save graphs and statistics for reporting.
-   *(Insert image showing export options)*
 
 ---
 
@@ -129,9 +123,15 @@ This project is licensed under the MIT License. See `LICENSE` for details.
 
 ## Acknowledgments
 - Inspired by digital signal processing principles and the Nyquist–Shannon sampling theorem.
-- Contributions from [Team Name/Group].
+## Contributors
+- [Ziad Mohamed](https://github.com/Ziadmohammed200) 
+- [Marcilino Adel](https://github.com/marcilino-adel)
+- [Pavly Awad](https://github.com/PavlyAwad)
+- [Ahmed Etman](https://github.com/AhmedEtma)
 
 
 
-https://github.com/user-attachments/assets/708ba4df-77a2-4cc8-9ee3-5b7c1575bc34
+
+
+
 
