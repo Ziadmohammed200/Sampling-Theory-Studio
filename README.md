@@ -36,8 +36,6 @@ Sampling an analog signal is a crucial step in any digital signal processing sys
 ### 4. **Real-Time Processing**
 - Sampling and recovery occur in real time without requiring “Update” or “Refresh” buttons.
 
-*(Insert video showing real-time updates)*
-
 ### 5. **Reconstruction Methods**
 - Explore multiple signal reconstruction methods, including Whittaker–Shannon interpolation.
 - Allow users to select a reconstruction method via a combobox.
