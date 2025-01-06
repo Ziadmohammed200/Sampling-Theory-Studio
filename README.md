@@ -18,21 +18,20 @@ Sampling an analog signal is a crucial step in any digital signal processing sys
   4. Frequency domain visualization to check for aliasing.
 - Sampling frequency is displayed as actual or normalized values (e.g., 0×fmax to 4×fmax).
 
-*(Insert image/video of sample and recovery UI)*
 
 ### 2. **Load & Compose**
 - Load signals from a file or create a mixed signal using the signal mixer.
 - Add sinusoidal components with adjustable frequencies and magnitudes.
 - Remove components dynamically while preparing the mixed signal.
 - Ensure default values are displayed to avoid empty fields.
+![Start](https://github.com/user-attachments/assets/c1fcb829-67b4-49bc-81ef-a824fdd9c87d)
 
-*(Insert image of signal composer interface)*
 
 ### 3. **Additive Noise**
 - Add noise to the loaded signal with a custom signal-to-noise ratio (SNR).
 - Demonstrate the dependency of noise effect on signal frequency.
+![Noisy_signal](https://github.com/user-attachments/assets/403c7499-6f15-4ab3-9c1b-ba0a7b74aa58)
 
-*(Insert image demonstrating noise addition)*
 
 ### 4. **Real-Time Processing**
 - Sampling and recovery occur in real time without requiring “Update” or “Refresh” buttons.
@@ -44,20 +43,21 @@ Sampling an analog signal is a crucial step in any digital signal processing sys
 - Allow users to select a reconstruction method via a combobox.
 - Compare methods based on performance, with explanations of their pros and cons.
 
-*(Insert image or video comparing reconstruction methods)*
+- ![Methods](https://github.com/user-attachments/assets/9e60ec13-7f43-4bbc-9a78-e995a8f708b2)
+
 
 ### 6. **Resizable Interface**
 - The application resizes gracefully without disrupting the UI layout.
-
-*(Insert image demonstrating interface resizing)*
 
 ### 7. **Testing Scenarios**
 - Prepare at least three synthetic test signals to explore sampling and aliasing scenarios. Examples include:
   - **Scenario 1:** A mix of 2Hz and 6Hz sinusoids sampled at 12Hz (or above) for accurate recovery, but showing aliasing when sampled at 4Hz.
   - **Scenario 2:** Highlighting noise impact at different frequencies.
   - **Scenario 3:** Sampling a signal with a critical frequency component.
+![Aliasing](https://github.com/user-attachments/assets/83f78e51-b2cd-4031-84c4-cc2686836955)
 
-*(Insert images/videos demonstrating test scenarios)*
+### 8. **Interactive Demo: Sampling Theory Studio App**
+https://github.com/user-attachments/assets/441c5a2d-2587-4ccc-899f-2400b3b24709
 
 ---
 
@@ -83,7 +83,7 @@ Sampling an analog signal is a crucial step in any digital signal processing sys
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/sampling-theory-studio.git
+   git clone https://github.com/Ziadmohammed200/Signal-Studio.git
    cd sampling-theory-studio
    ```
 
@@ -104,23 +104,15 @@ Sampling an analog signal is a crucial step in any digital signal processing sys
 1. **Load or Compose Signals**:
    - Use the "Load Signal" button to import a signal file.
    - Alternatively, create a mixed signal using the signal composer.
-   *(Insert image showing signal loading and composition)*
 
 2. **Add Noise**:
    - Adjust the SNR slider to add noise to the signal.
-   *(Insert image showing noise addition UI)*
 
 3. **Sample and Recover**:
    - Adjust the sampling frequency and observe the reconstruction in real time.
-   *(Insert video demonstrating real-time sampling and recovery)*
 
 4. **Test Different Reconstruction Methods**:
    - Select a reconstruction method from the combobox and compare results.
-   *(Insert image showing method selection and comparison)*
-
-5. **Export Results**:
-   - Save graphs and statistics for reporting.
-   *(Insert image showing export options)*
 
 ---
 
@@ -131,9 +123,15 @@ This project is licensed under the MIT License. See `LICENSE` for details.
 
 ## Acknowledgments
 - Inspired by digital signal processing principles and the Nyquist–Shannon sampling theorem.
-- Contributions from [Team Name/Group].
+## Contributors
+- [Ziad Mohamed](https://github.com/Ziadmohammed200) 
+- [Marcilino Adel](https://github.com/marcilino-adel)
+- [Pavly Awad](https://github.com/PavlyAwad)
+- [Ahmed Etman](https://github.com/AhmedEtma)
 
 
 
-https://github.com/user-attachments/assets/708ba4df-77a2-4cc8-9ee3-5b7c1575bc34
+
+
+
 
