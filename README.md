@@ -83,7 +83,7 @@ https://github.com/user-attachments/assets/441c5a2d-2587-4ccc-899f-2400b3b24709
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/sampling-theory-studio.git
+   git clone https://github.com/Ziadmohammed200/Signal-Studio.git
    cd sampling-theory-studio
    ```
 
