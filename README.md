@@ -18,21 +18,20 @@ Sampling an analog signal is a crucial step in any digital signal processing sys
   4. Frequency domain visualization to check for aliasing.
 - Sampling frequency is displayed as actual or normalized values (e.g., 0×fmax to 4×fmax).
 
-*(Insert image/video of sample and recovery UI)*
 
 ### 2. **Load & Compose**
 - Load signals from a file or create a mixed signal using the signal mixer.
 - Add sinusoidal components with adjustable frequencies and magnitudes.
 - Remove components dynamically while preparing the mixed signal.
 - Ensure default values are displayed to avoid empty fields.
+![Start](https://github.com/user-attachments/assets/c1fcb829-67b4-49bc-81ef-a824fdd9c87d)
 
-*(Insert image of signal composer interface)*
 
 ### 3. **Additive Noise**
 - Add noise to the loaded signal with a custom signal-to-noise ratio (SNR).
 - Demonstrate the dependency of noise effect on signal frequency.
+![Noisy_signal](https://github.com/user-attachments/assets/403c7499-6f15-4ab3-9c1b-ba0a7b74aa58)
 
-*(Insert image demonstrating noise addition)*
 
 ### 4. **Real-Time Processing**
 - Sampling and recovery occur in real time without requiring “Update” or “Refresh” buttons.
@@ -44,20 +43,19 @@ Sampling an analog signal is a crucial step in any digital signal processing sys
 - Allow users to select a reconstruction method via a combobox.
 - Compare methods based on performance, with explanations of their pros and cons.
 
-*(Insert image or video comparing reconstruction methods)*
+- ![Methods](https://github.com/user-attachments/assets/9e60ec13-7f43-4bbc-9a78-e995a8f708b2)
+
 
 ### 6. **Resizable Interface**
 - The application resizes gracefully without disrupting the UI layout.
-
-*(Insert image demonstrating interface resizing)*
 
 ### 7. **Testing Scenarios**
 - Prepare at least three synthetic test signals to explore sampling and aliasing scenarios. Examples include:
   - **Scenario 1:** A mix of 2Hz and 6Hz sinusoids sampled at 12Hz (or above) for accurate recovery, but showing aliasing when sampled at 4Hz.
   - **Scenario 2:** Highlighting noise impact at different frequencies.
   - **Scenario 3:** Sampling a signal with a critical frequency component.
+![Aliasing](https://github.com/user-attachments/assets/83f78e51-b2cd-4031-84c4-cc2686836955)
 
-*(Insert images/videos demonstrating test scenarios)*
 
 ---
 
